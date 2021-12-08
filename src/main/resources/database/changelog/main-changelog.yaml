@@ -1,0 +1,3 @@
+databaseChangeLog:
+  - include:
+      file: database/changelog/01-basic-schema.yaml

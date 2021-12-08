@@ -1,0 +1,15 @@
+server:
+  port: ${PORT}
+
+spring:
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+
+  liquibase:
+    change-log: database/changelog/main-changelog.yaml
+
+bot:
+  username: ${BOT_NAME}
+  token: ${BOT_TOKEN}
