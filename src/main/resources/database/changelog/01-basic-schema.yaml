@@ -1,0 +1,109 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: dolzhanskii
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: chats
+            - tableExists:
+                tableName: todos
+            - tableExists:
+                tableName: daily_notifications
+            - tableExists:
+                tableName: todo_notifications
+      changes:
+        - createTable:
+            tableName: chats
+            columns:
+              - column:
+                  name: chat_id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: chats_pk
+        - createTable:
+            tableName: todos
+            columns:
+              - column:
+                  name: todo_id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: todos_pk
+              - column:
+                  name: name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(1024)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: start_time
+                  type: timestamp
+                  constraints:
+                    nullable: true
+              - column:
+                  name: end_time
+                  type: timestamp
+                  constraints:
+                    nullable: true
+              - column:
+                  name: completed
+                  type: boolean
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false
+              - column:
+                  name: chat_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: todos_fk1
+                    references: chats(chat_id)
+        - createTable:
+            tableName: daily_notifications
+            columns:
+              - column:
+                  name: daily_notification_id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: daily_notifications_pk
+              - column:
+                  name: notification_time
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chat_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: daily_notifications_fk1
+                    references: chats(chat_id)
+        - createTable:
+            tableName: todo_notifications
+            columns:
+              - column:
+                  name: todo_notification_id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: todo_notifications_pk
+              - column:
+                  name: notification_time
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: todo_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: todo_notifications_fk1
+                    references: todos(todo_id)
