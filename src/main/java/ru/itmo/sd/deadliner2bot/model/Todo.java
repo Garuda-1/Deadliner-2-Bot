@@ -1,20 +1,27 @@
 package ru.itmo.sd.deadliner2bot.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.TreeSet;
 
 @Entity
+@Getter
+@Setter
+@RequiredArgsConstructor
 @Table(name = "todos")
 public class Todo implements Comparable<Todo> {
 
     @Id
     @GeneratedValue
-    @Column(name = "todo_id")
+    @Column(name = "todo_id", nullable = false)
     private long todoId;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "start_time")
@@ -23,8 +30,11 @@ public class Todo implements Comparable<Todo> {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
-    @Column(name = "completed")
-    private boolean completed;
+    @Column(name = "completed", nullable = false)
+    private boolean completed = false;
+
+    @Column(name = "daily_notifications_enabled", nullable = false)
+    private boolean dailyNotificationsEnabled = false;
 
     @OneToMany(mappedBy = "todo")
     private Set<TodoNotification> todoNotifications = new TreeSet<>();
