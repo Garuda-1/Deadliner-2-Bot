@@ -1,5 +1,10 @@
 package ru.itmo.sd.deadliner2bot.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,6 +18,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@RequiredArgsConstructor
 @Table(name = "todos")
 public class Todo implements Comparable<Todo> {
 
