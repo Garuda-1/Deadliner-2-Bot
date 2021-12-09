@@ -1,7 +1,6 @@
 package ru.itmo.sd.deadliner2bot.model;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
@@ -20,7 +19,6 @@ import java.util.TreeSet;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @RequiredArgsConstructor
 @Table(name = "todos")
 public class Todo implements Comparable<Todo> {

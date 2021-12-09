@@ -1,7 +1,6 @@
 package ru.itmo.sd.deadliner2bot.model;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
@@ -17,7 +16,6 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @RequiredArgsConstructor
 @Table(name = "todo_notifications")
 public class TodoNotification implements Comparable<TodoNotification> {
