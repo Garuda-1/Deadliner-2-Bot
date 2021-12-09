@@ -16,7 +16,7 @@ import java.util.TreeSet;
 public class Chat {
 
     @Id
-    @Column(name = "chat_id")
+    @Column(name = "chat_id", nullable = false)
     private long chatId;
 
     @OneToMany(mappedBy = "chat")

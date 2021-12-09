@@ -16,10 +16,10 @@ public class TodoNotification implements Comparable<TodoNotification> {
 
     @Id
     @GeneratedValue
-    @Column(name = "todo_notification_id")
+    @Column(name = "todo_notification_id", nullable = false)
     private long todoNotificationId;
 
-    @Column(name = "notification_time")
+    @Column(name = "notification_time", nullable = false)
     private LocalDateTime notificationTime;
 
     @ManyToOne

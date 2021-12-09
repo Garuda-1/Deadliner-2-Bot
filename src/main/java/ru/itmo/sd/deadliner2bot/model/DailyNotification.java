@@ -16,10 +16,10 @@ public class DailyNotification implements Comparable<DailyNotification> {
 
     @Id
     @GeneratedValue
-    @Column(name = "daily_notification_id")
+    @Column(name = "daily_notification_id", nullable = false)
     private long dailyNotificationId;
 
-    @Column(name = "notification_time")
+    @Column(name = "notification_time", nullable = false)
     private LocalDateTime notificationTime;
 
     @ManyToOne
