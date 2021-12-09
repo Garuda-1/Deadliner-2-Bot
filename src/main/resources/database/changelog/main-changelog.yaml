@@ -3,3 +3,5 @@ databaseChangeLog:
       file: database/changelog/01-basic-schema.yaml
   - include:
       file: database/changelog/02-add-enable-daily-notifications.yaml
+  - include:
+      file: database/changelog/03-add-chat-state.yaml
