@@ -68,6 +68,17 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
+    public void sendMessage(long chatId, String message) {
+        try {
+            execute(SendMessage.builder()
+                    .chatId(Long.toString(chatId))
+                    .text(message)
+                    .build());
+        } catch (TelegramApiException e) {
+            log.warn("Failed to send message to chat_id = " + chatId + "\n", e);
+        }
+    }
+
     @Override
     public String getBotUsername() {
         return botUsername;
