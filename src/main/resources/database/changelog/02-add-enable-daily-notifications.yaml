@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: dolzhanskii
+      changes:
+        - addColumn:
+            tableName: todos
+            columns:
+              - column:
+                  name: daily_notifications_enabled
+                  type: boolean
+                  constraints:
+                    nullable: false

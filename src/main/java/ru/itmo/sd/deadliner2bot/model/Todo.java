@@ -1,6 +1,13 @@
 package ru.itmo.sd.deadliner2bot.model;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.TreeSet;
@@ -25,6 +32,9 @@ public class Todo implements Comparable<Todo> {
 
     @Column(name = "completed")
     private boolean completed;
+
+    @Column(name = "daily_notifications_enabled")
+    private boolean dailyNotificationsEnabled;
 
     @OneToMany(mappedBy = "todo")
     private Set<TodoNotification> todoNotifications = new TreeSet<>();
