@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class TodoNotification implements Comparable<TodoNotification> {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "todo_notification_id", nullable = false)
     private long todoNotificationId;
 
