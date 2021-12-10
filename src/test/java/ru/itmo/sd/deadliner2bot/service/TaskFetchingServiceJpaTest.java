@@ -120,11 +120,14 @@ class TaskFetchingServiceJpaTest {
         createDailyNotification(chat, notificationTime);
 
         taskFetchingService.fetchNotifications();
+
+        assertThat(dailyNotificationRepository.findAllBeforeTimeLimit(now.plusSeconds(storedRangeSec))).isEmpty();
         ArgumentCaptor<TaskFetchingService.DailyNotificationRunnable> argumentCaptor =
                 ArgumentCaptor.forClass(TaskFetchingService.DailyNotificationRunnable.class);
         verify(threadPoolTaskScheduler, times(1))
                 .schedule(argumentCaptor.capture(),
                         eq(Timestamp.valueOf(notificationTime)));
+
         TaskFetchingService.DailyNotificationRunnable runnable = argumentCaptor.getValue();
         runnable.run();
         verify(bot, times(1)).sendMessage(eq(chat.getChatId()), any());
@@ -138,11 +141,14 @@ class TaskFetchingServiceJpaTest {
         createTodoWithNotification(chat, notificationTime);
 
         taskFetchingService.fetchNotifications();
+
+        assertThat(dailyNotificationRepository.findAllBeforeTimeLimit(now.plusSeconds(storedRangeSec))).isEmpty();
         ArgumentCaptor<TaskFetchingService.TodoNotificationRunnable> argumentCaptor =
                 ArgumentCaptor.forClass(TaskFetchingService.TodoNotificationRunnable.class);
         verify(threadPoolTaskScheduler, times(1))
                 .schedule(argumentCaptor.capture(),
                         eq(Timestamp.valueOf(notificationTime)));
+        
         TaskFetchingService.TodoNotificationRunnable runnable = argumentCaptor.getValue();
         runnable.run();
         verify(bot, times(1)).sendMessage(eq(chat.getChatId()), any());
