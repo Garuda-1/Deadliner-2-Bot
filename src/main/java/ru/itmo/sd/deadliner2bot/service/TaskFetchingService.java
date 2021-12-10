@@ -43,23 +43,25 @@ public class TaskFetchingService {
     @Async
     @Transactional
     @Scheduled(fixedRate = 60, timeUnit = TimeUnit.SECONDS)
+    public void doScheduledJob() {
+        fetchNotifications();
+    }
+
     public void fetchNotifications() {
         log.info("Fetching notifications...");
         LocalDateTime timeLimit = LocalDateTime.now().plusSeconds(storedRangeSec);
 
-        Set<DailyNotification> dailyNotifications = dailyNotificationRepository.findAllBeforeTimeLimit(timeLimit);
+        Set<DailyNotification> dailyNotifications = getDailyNotifications(timeLimit);
         dailyNotifications.forEach(dailyNotification ->
                 threadPoolTaskScheduler.schedule(new DailyNotificationRunnable(
-                                dailyNotification.getDailyNotificationId(),
                                 dailyNotification.getChat().getChatId(),
                                 dailyNotification.getNotificationTime()),
                         Timestamp.valueOf(dailyNotification.getNotificationTime())));
         log.info("Scheduled {} daily notifications", dailyNotifications.size());
 
-        Set<TodoNotification> todoNotifications = todoNotificationRepository.findAllBeforeTimeLimit(timeLimit);
+        Set<TodoNotification> todoNotifications = getTodoNotifications(timeLimit);
         todoNotifications.forEach(todoNotification ->
                 threadPoolTaskScheduler.schedule(new TodoNotificationRunnable(
-                                todoNotification.getTodoNotificationId(),
                                 todoNotification.getTodo().getChat().getChatId(),
                                 TodoDto.builder()
                                         .name(todoNotification.getTodo().getName())
@@ -73,10 +75,17 @@ public class TaskFetchingService {
         log.debug("Purged obsolete notifications");
     }
 
-    @RequiredArgsConstructor
-    private class DailyNotificationRunnable implements Runnable {
+    Set<DailyNotification> getDailyNotifications(LocalDateTime timeLimit) {
+        return dailyNotificationRepository.findAllBeforeTimeLimit(timeLimit);
+    }
 
-        private final long dailyNotificationId;
+    Set<TodoNotification> getTodoNotifications(LocalDateTime timeLimit) {
+        return todoNotificationRepository.findAllBeforeTimeLimit(timeLimit);
+    }
+
+    @RequiredArgsConstructor
+    class DailyNotificationRunnable implements Runnable {
+
         private final long chatId;
         private final LocalDateTime notificationTime;
 
@@ -97,9 +106,8 @@ public class TaskFetchingService {
     }
 
     @RequiredArgsConstructor
-    private class TodoNotificationRunnable implements Runnable {
+    class TodoNotificationRunnable implements Runnable {
 
-        private final long todoNotificationId;
         private final long chatId;
         private final TodoDto todoDto;
 

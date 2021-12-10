@@ -17,7 +17,7 @@ import java.util.TreeSet;
 public class Todo implements Comparable<Todo> {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "todo_id", nullable = false)
     private long todoId;
 
