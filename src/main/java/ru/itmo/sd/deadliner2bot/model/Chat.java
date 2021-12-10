@@ -21,7 +21,7 @@ public class Chat {
 
     @Column(name = "state", nullable = false)
     @Enumerated(value = EnumType.STRING)
-    private ChatState state;
+    private ChatStateEnum state;
 
     @OneToMany(mappedBy = "chat")
     private Set<Todo> todos = new TreeSet<>();
