@@ -16,4 +16,8 @@ public interface DailyNotificationRepository extends CrudRepository<DailyNotific
     @Modifying
     @Query(value = "DELETE FROM daily_notifications WHERE notification_time < ?", nativeQuery = true)
     void removeAllBeforeTimeLimit(LocalDateTime timeLimit);
+
+    @Query(value = "SELECT D.* FROM daily_notifications D INNER JOIN chats C on C.chat_id = D.chat_id " +
+                   "WHERE C.chat_id = ?1 ", nativeQuery = true)
+    Set<DailyNotification> findDailyNotificationsByChat(long chatId);
 }

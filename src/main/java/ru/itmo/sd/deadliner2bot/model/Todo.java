@@ -24,6 +24,9 @@ public class Todo implements Comparable<Todo> {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "start_time")
     private LocalDateTime startTime;
 
@@ -35,6 +38,9 @@ public class Todo implements Comparable<Todo> {
 
     @Column(name = "daily_notifications_enabled", nullable = false)
     private boolean dailyNotificationsEnabled = false;
+
+    @Column(name = "selected", nullable = false)
+    private boolean selected = false;
 
     @OneToMany(mappedBy = "todo")
     private Set<TodoNotification> todoNotifications = new TreeSet<>();
