@@ -9,13 +9,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import ru.itmo.sd.deadliner2bot.bot.Bot;
 import ru.itmo.sd.deadliner2bot.dto.TodoDto;
-import ru.itmo.sd.deadliner2bot.messages.MessageFormatter;
 import ru.itmo.sd.deadliner2bot.model.DailyNotification;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.model.TodoNotification;
 import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoRepository;
+import ru.itmo.sd.deadliner2bot.utils.messages.MessageFormatter;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;

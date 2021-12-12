@@ -5,11 +5,11 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import ru.itmo.sd.deadliner2bot.bot.Bot;
-import ru.itmo.sd.deadliner2bot.messages.MessageFormatter;
 import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoRepository;
 import ru.itmo.sd.deadliner2bot.service.TaskFetchingService;
+import ru.itmo.sd.deadliner2bot.utils.messages.MessageFormatter;
 
 @TestConfiguration
 public class ServiceTestConfiguration {

@@ -19,6 +19,10 @@ public class Chat {
     @Column(name = "chat_id", nullable = false)
     private long chatId;
 
+    @Column(name = "state", nullable = false)
+    @Enumerated(value = EnumType.STRING)
+    private ChatStateEnum state;
+
     @OneToMany(mappedBy = "chat")
     private Set<Todo> todos = new TreeSet<>();
 

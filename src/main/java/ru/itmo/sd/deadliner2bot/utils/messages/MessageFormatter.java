@@ -1,4 +1,4 @@
-package ru.itmo.sd.deadliner2bot.messages;
+package ru.itmo.sd.deadliner2bot.utils.messages;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -8,7 +8,10 @@ import ru.itmo.sd.deadliner2bot.dto.TodoDto;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringJoiner;
 
 @Component
 public class MessageFormatter {

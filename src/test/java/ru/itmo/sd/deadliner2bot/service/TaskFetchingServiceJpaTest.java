@@ -148,7 +148,7 @@ class TaskFetchingServiceJpaTest {
         verify(threadPoolTaskScheduler, times(1))
                 .schedule(argumentCaptor.capture(),
                         eq(Timestamp.valueOf(notificationTime)));
-        
+
         TaskFetchingService.TodoNotificationRunnable runnable = argumentCaptor.getValue();
         runnable.run();
         verify(bot, times(1)).sendMessage(eq(chat.getChatId()), any());
@@ -157,6 +157,7 @@ class TaskFetchingServiceJpaTest {
     private Chat createChat() {
         Chat chat = new Chat();
         chat.setChatId(1);
+        chat.setState(ChatStateEnum.BASE_STATE);
         return chatRepository.save(chat);
     }
 
