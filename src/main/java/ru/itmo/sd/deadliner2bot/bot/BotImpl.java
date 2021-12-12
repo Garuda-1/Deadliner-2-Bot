@@ -7,11 +7,10 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.itmo.sd.deadliner2bot.service.ChatStateService;
+import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
 import java.util.List;
 
@@ -27,9 +26,7 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
     private String botToken;
 
     private final ChatStateService chatStateService;
-
-    private final InputFile defaultResponse = new InputFile(
-            "CAACAgIAAxkBAAMRYbJM3wABmFg_wMNH_vYufdrHebfXAAK4AAMTF8olDES8JhyUUCMjBA");
+    private final MessageUtils messageUtils;
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -40,28 +37,19 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
             chatId = update.getMessage().getChatId();
             messageText = update.getMessage().getText();
         } else {
-            chatId = update.getChannelPost().getChatId();
-            messageText = update.getChannelPost().getText();
+            log.debug("No message in update");
+            return;
         }
 
         try {
-            if (messageText.startsWith("/ping")) {
-                execute(SendMessage.builder()
-                        .chatId(Long.toString(chatId))
-                        .text("pong")
-                        .build());
-            } else {
-                List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText);
-                if (response == null || response.isEmpty()) {
-                    execute(SendSticker.builder()
-                            .chatId(Long.toString(chatId))
-                            .sticker(defaultResponse)
-                            .build());
-                } else {
-                    for (BotApiMethod<?> message : response) {
-                        execute(message);
-                    }
+            List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText);
+            if (response != null && !response.isEmpty()) {
+                for (BotApiMethod<?> message : response) {
+                    execute(message);
                 }
+            } else {
+                execute(messageUtils.createMessage(chatId, "Message is not recognised"));
+                execute(messageUtils.getSticker(chatId));
             }
         } catch (TelegramApiException e) {
             log.debug("Failed to respond\n" + e);

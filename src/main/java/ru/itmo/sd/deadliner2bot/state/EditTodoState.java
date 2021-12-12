@@ -3,12 +3,12 @@ package ru.itmo.sd.deadliner2bot.state;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import ru.itmo.sd.deadliner2bot.messages.MessageService;
 import ru.itmo.sd.deadliner2bot.model.Chat;
 import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +19,7 @@ public class EditTodoState implements ChatState {
 
     private final ChatRepository chatRepository;
     private final ChatStateEnum chatStateEnum = ChatStateEnum.EDIT_TODO;
-    private final MessageService messageService;
+    private final MessageUtils messageUtils;
     private final TodoService todoService;
 
 
@@ -33,45 +33,47 @@ public class EditTodoState implements ChatState {
                 todo.get().setSelected(false);
                 todoService.save(todo.get());
             }
-            return List.of(messageService.createMessage(chat, "Operation canceled."));
+            return List.of(messageUtils.createMessage(chat, "Operation canceled."));
         } else if (todo.isEmpty()) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageService.createMessage(chat, "No todo selected, cancelled."));
+            return List.of(messageUtils.createMessage(chat, "No todo selected, cancelled."));
         } else if (message.startsWith("/save_todo")) {
             todo.get().setSelected(false);
             todoService.save(todo.get());
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageService.createMessage(chat, "Todo saved."));
+            return List.of(messageUtils.createMessage(chat, "Todo saved."));
         } else if (message.startsWith("/change_name")) {
-            chat.setState(ChatStateEnum.ADD_TODO_NAME);
+            chat.setState(ChatStateEnum.ADD_NAME);
             chatRepository.save(chat);
-            return List.of(messageService.createMessage(chat, "Please enter new name"));
+            return List.of(messageUtils.createMessage(chat, "Please enter new name."));
         } else if (message.startsWith("/add_description")) {
             chat.setState(ChatStateEnum.ADD_DESCRIPTION);
             chatRepository.save(chat);
-            return List.of(messageService.createMessage(chat, "Please enter description"));
+            return List.of(messageUtils.createMessage(chat, "Please enter description."));
         } else if (message.startsWith("/add_start_date")) {
             chat.setState(ChatStateEnum.ADD_START_DATE);
             chatRepository.save(chat);
-            //TODO
-            return List.of(messageService.createMessage(chat, "Please enter start date"));
+            return List.of(messageUtils.createMessage(chat, "Please enter start date."));
         } else if (message.startsWith("/add_end_date")) {
             chat.setState(ChatStateEnum.ADD_END_DATE);
             chatRepository.save(chat);
-            //TODO
-            return List.of(messageService.createMessage(chat, "Please enter end date"));
+            return List.of(messageUtils.createMessage(chat, "Please enter end date."));
+        } else if (message.startsWith("/add_notification")) {
+            chat.setState(ChatStateEnum.ADD_TODO_NOTIFICATION);
+            chatRepository.save(chat);
+            return List.of(messageUtils.createMessage(chat, "Please enter notification date and time."));
         } else if (message.startsWith("/switch_daily_notifications")) {
             Todo selected = todo.get();
             selected.setDailyNotificationsEnabled(!selected.isDailyNotificationsEnabled());
-            return List.of(messageService.createMessage(chat, "Unsupported operation"));
+            return List.of(messageUtils.createMessage(chat, "Unsupported operation."));
         }
         return null;
     }
 
     @Override
-    public ChatStateEnum getEnum() {
+    public ChatStateEnum getChatStateEnum() {
         return chatStateEnum;
     }
 }

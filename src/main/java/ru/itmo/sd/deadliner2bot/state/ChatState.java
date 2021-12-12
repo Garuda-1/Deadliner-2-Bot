@@ -10,5 +10,5 @@ public interface ChatState {
 
     List<BotApiMethod<?>> process(Chat chat, String message);
 
-    ChatStateEnum getEnum();
+    ChatStateEnum getChatStateEnum();
 }

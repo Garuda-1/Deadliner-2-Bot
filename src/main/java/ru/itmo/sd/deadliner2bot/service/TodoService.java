@@ -17,8 +17,8 @@ public class TodoService {
 
     private final TodoRepository todoRepository;
 
-    public List<Todo> findAllTodosByChatId(long chatId, LocalDateTime now) {
-        return todoRepository.findAllTodosByChatId(chatId, now)
+    public List<Todo> findNotCompletedTodosByChatId(long chatId, LocalDateTime now) {
+        return todoRepository.findNotCompletedTodosByChatId(chatId, now)
                 .stream()
                 .sorted(Comparator.comparing(Todo::getEndTime, Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
@@ -35,5 +35,4 @@ public class TodoService {
     public void save(Todo todo) {
         todoRepository.save(todo);
     }
-
 }

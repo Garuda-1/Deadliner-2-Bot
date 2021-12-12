@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.itmo.sd.deadliner2bot.model.DailyNotification;
 import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Service
@@ -17,8 +18,7 @@ public class DailyNotificationService {
         dailyNotificationRepository.save(notification);
     }
 
-    public Set<DailyNotification> findDailyNotificationsByChat(long chatId) {
-        return dailyNotificationRepository.findDailyNotificationsByChat(chatId);
+    public Set<DailyNotification> findDailyNotificationsByChatStartingWithDate(long chatId, LocalDateTime startingDate) {
+        return dailyNotificationRepository.findDailyNotificationsByChatStartingWithDate(chatId, startingDate);
     }
-
 }
