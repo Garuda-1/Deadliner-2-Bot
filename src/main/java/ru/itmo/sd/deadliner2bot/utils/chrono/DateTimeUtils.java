@@ -1,11 +1,10 @@
-package ru.itmo.sd.deadliner2bot.utils;
+package ru.itmo.sd.deadliner2bot.utils.chrono;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
@@ -31,10 +30,25 @@ public class DateTimeUtils {
             .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
             .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
             .toFormatter();
-    public static final LocalDateTime startDateUnconfirmed = LocalDateTime.of(2028, 12, 31, 23, 59);
-    public static final LocalDateTime startDateConfirmed = LocalDateTime.of(1995, 12, 31, 23, 59);
 
-    public static LocalDateTime parseDateTime(String dateTimeString) {
+    private LocalDateTime stagingWeekStartDateTime;
+    private LocalDateTime stagingWeekAuxStartDateTime;
+
+    @Value("${notifications.daily.staging-week}")
+    private void setStagingWeekStartDateTime(String stagingWeek) {
+        if (stagingWeek != null && !stagingWeek.isEmpty()) {
+            stagingWeekStartDateTime = LocalDate.parse(stagingWeek).atStartOfDay().minusDays(1);
+        }
+    }
+
+    @Value("${notifications.daily.staging-week-aux}")
+    private void setStagingWeekAuxStartDateTime(String stagingWeekAux) {
+        if (stagingWeekAux != null && !stagingWeekAux.isEmpty()) {
+            stagingWeekAuxStartDateTime = LocalDate.parse(stagingWeekAux).atStartOfDay().minusDays(1);
+        }
+    }
+
+    public LocalDateTime parseDateTime(String dateTimeString) {
         if (dateTimeString.length() > dateTimeFormat.length()) {
             return null;
         }
@@ -46,19 +60,19 @@ public class DateTimeUtils {
         }
     }
 
-    public static LocalDateTime getDateTimeFromDayUnconfirmed(DayOfWeek dayOfWeek) {
-        return startDateUnconfirmed.with(TemporalAdjusters.next(dayOfWeek));
+    public LocalDateTime getDateTimeFromDayUnconfirmed(DayOfWeek dayOfWeek) {
+        return stagingWeekAuxStartDateTime.with(TemporalAdjusters.next(dayOfWeek));
     }
 
-    public static LocalDateTime setTimeAndConfirmed(LocalDateTime date, LocalTime time) {
+    public LocalDateTime setTimeAndConfirmed(LocalDateTime date, LocalTime time) {
         DayOfWeek day = date.getDayOfWeek();
-        date = startDateConfirmed.with(TemporalAdjusters.next(day));
+        date = stagingWeekStartDateTime.with(TemporalAdjusters.next(day));
         date = date.plusHours(time.getHour());
         date = date.plusMinutes(time.getMinute());
         return date;
     }
 
-    public static LocalDateTime parseDate(String dateString) {
+    public LocalDateTime parseDate(String dateString) {
         dateString = deleteSpaces(dateString);
         if (dateString.length() > dateFormat.length()) {
             return null;
@@ -70,7 +84,7 @@ public class DateTimeUtils {
         }
     }
 
-    public static LocalTime parseTime(String timeString) {
+    public LocalTime parseTime(String timeString) {
         timeString = deleteSpaces(timeString);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeFormat);
         try {
@@ -80,7 +94,7 @@ public class DateTimeUtils {
         }
     }
 
-    public static Set<DayOfWeek> parseDaysOfWeek(String message) {
+    public Set<DayOfWeek> parseDaysOfWeek(String message) {
         String[] daysString = message.split(" +");
         DateTimeFormatter formatterShort = DateTimeFormatter.ofPattern("EEE", Locale.US);
         DateTimeFormatter formatterFull = DateTimeFormatter.ofPattern("EEEE", Locale.US);
@@ -102,7 +116,7 @@ public class DateTimeUtils {
         return days;
     }
 
-    private static String deleteSpaces(String input) {
+    private String deleteSpaces(String input) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < input.length(); i++) {
             if (!Character.isWhitespace(input.charAt(i))) {
@@ -110,5 +124,9 @@ public class DateTimeUtils {
             }
         }
         return result.toString();
+    }
+
+    public LocalDateTime getStagingWeekAuxStartDateTime() {
+        return stagingWeekAuxStartDateTime;
     }
 }

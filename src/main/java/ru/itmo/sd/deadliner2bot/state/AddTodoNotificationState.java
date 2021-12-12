@@ -3,21 +3,18 @@ package ru.itmo.sd.deadliner2bot.state;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import ru.itmo.sd.deadliner2bot.model.Chat;
-import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
-import ru.itmo.sd.deadliner2bot.model.Todo;
-import ru.itmo.sd.deadliner2bot.model.TodoNotification;
+import ru.itmo.sd.deadliner2bot.model.*;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static ru.itmo.sd.deadliner2bot.utils.DateTimeUtils.dateTimeFormat;
-import static ru.itmo.sd.deadliner2bot.utils.DateTimeUtils.parseDateTime;
+import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateTimeFormat;
 
 @Component
 @RequiredArgsConstructor
@@ -26,6 +23,7 @@ public class AddTodoNotificationState implements ChatState {
     private final ChatRepository chatRepository;
     private final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_TODO_NOTIFICATION;
     private final MessageUtils messageUtils;
+    private final DateTimeUtils dateTimeUtils;
     private final TodoService todoService;
     //Todo: change to service
     private final TodoNotificationRepository repository;
@@ -47,7 +45,7 @@ public class AddTodoNotificationState implements ChatState {
                 chatRepository.save(chat);
                 return List.of(messageUtils.createMessage(chat, "No todo selected, cancelled."));
             } else {
-                LocalDateTime dateTime = parseDateTime(message);
+                LocalDateTime dateTime = dateTimeUtils.parseDateTime(message);
                 if (dateTime == null) {
                     return List.of(messageUtils.createMessage(chat, "Invalid date or time, use format: " + dateTimeFormat));
                 }

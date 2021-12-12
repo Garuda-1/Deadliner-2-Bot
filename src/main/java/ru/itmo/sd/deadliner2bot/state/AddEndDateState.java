@@ -8,14 +8,14 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static ru.itmo.sd.deadliner2bot.utils.DateTimeUtils.dateFormat;
-import static ru.itmo.sd.deadliner2bot.utils.DateTimeUtils.parseDate;
+import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateFormat;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +24,7 @@ public class AddEndDateState implements ChatState {
     private final ChatRepository chatRepository;
     private final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_END_DATE;
     private final MessageUtils messageUtils;
+    private final DateTimeUtils dateTimeUtils;
     private final TodoService todoService;
 
     @Override
@@ -43,7 +44,7 @@ public class AddEndDateState implements ChatState {
                 chatRepository.save(chat);
                 return List.of(messageUtils.createMessage(chat, "No todo selected, cancelled."));
             } else {
-                LocalDateTime date = parseDate(message);
+                LocalDateTime date = dateTimeUtils.parseDate(message);
                 if (date != null) {
                     chat.setState(ChatStateEnum.EDIT_TODO);
                     chatRepository.save(chat);

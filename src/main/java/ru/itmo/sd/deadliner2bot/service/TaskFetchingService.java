@@ -22,7 +22,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,16 +41,16 @@ public class TaskFetchingService {
 
     @Async
     @Transactional
-    @Scheduled(fixedRate = 60, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(cron = "0 * * * * *")
     public void doScheduledJob() {
-        fetchNotifications();
+        fetchNotifications(LocalDateTime.now());
     }
 
-    public void fetchNotifications() {
+    public void fetchNotifications(LocalDateTime now) {
         log.info("Fetching notifications...");
-        LocalDateTime timeLimit = LocalDateTime.now().plusSeconds(storedRangeSec);
+        LocalDateTime limit = now.plusSeconds(storedRangeSec);
 
-        Set<DailyNotification> dailyNotifications = getDailyNotifications(timeLimit);
+        Set<DailyNotification> dailyNotifications = getDailyNotifications(now, limit);
         dailyNotifications.forEach(dailyNotification ->
                 threadPoolTaskScheduler.schedule(new DailyNotificationRunnable(
                                 dailyNotification.getChat().getChatId(),
@@ -59,24 +58,15 @@ public class TaskFetchingService {
                         Timestamp.valueOf(dailyNotification.getNotificationTime())));
         log.info("Scheduled {} daily notifications", dailyNotifications.size());
 
-        Set<TodoNotification> todoNotifications = getTodoNotifications(timeLimit);
+        Set<TodoNotification> todoNotifications = getTodoNotifications(limit);
         todoNotifications.forEach(todoNotification ->
-                threadPoolTaskScheduler.schedule(new TodoNotificationRunnable(
-                                todoNotification.getTodo().getChat().getChatId(),
-                                TodoDto.builder()
-                                        .name(todoNotification.getTodo().getName())
-                                        .endTime(todoNotification.getTodo().getEndTime())
-                                        .build()),
+                threadPoolTaskScheduler.schedule(new TodoNotificationRunnable(todoNotification),
                         Timestamp.valueOf(todoNotification.getNotificationTime())));
         log.info("Scheduled {} todo notifications", todoNotifications.size());
-
-        dailyNotificationRepository.removeAllBeforeTimeLimit(timeLimit);
-        todoNotificationRepository.removeAllBeforeTimeLimit(timeLimit);
-        log.debug("Purged obsolete notifications");
     }
 
-    Set<DailyNotification> getDailyNotifications(LocalDateTime timeLimit) {
-        return dailyNotificationRepository.findAllBeforeTimeLimit(timeLimit);
+    Set<DailyNotification> getDailyNotifications(LocalDateTime now, LocalDateTime limit) {
+        return dailyNotificationRepository.findAllBeforeTimeLimitOnCurrentWeekday(now, limit);
     }
 
     Set<TodoNotification> getTodoNotifications(LocalDateTime timeLimit) {
@@ -108,13 +98,15 @@ public class TaskFetchingService {
     @RequiredArgsConstructor
     class TodoNotificationRunnable implements Runnable {
 
-        private final long chatId;
-        private final TodoDto todoDto;
+        private final TodoNotification todoNotification;
 
         @Override
         public void run() {
+            Todo todo = todoNotification.getTodo();
+            long chatId = todo.getChat().getChatId();
             log.debug("Sending todo notification for chat {}", chatId);
-            String message = messageFormatter.todoNotificationMessage(todoDto);
+            String message = messageFormatter.todoNotificationMessage(todo);
+            todoNotificationRepository.delete(todoNotification);
             bot.sendMessage(chatId, message);
         }
     }
