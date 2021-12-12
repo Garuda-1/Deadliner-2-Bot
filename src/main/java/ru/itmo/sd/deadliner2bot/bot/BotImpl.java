@@ -13,6 +13,7 @@ import ru.itmo.sd.deadliner2bot.service.ChatStateService;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @Slf4j
@@ -33,13 +34,12 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
         long chatId;
         String messageText;
 
-        if (update.getMessage() != null) {
-            chatId = update.getMessage().getChatId();
-            messageText = update.getMessage().getText();
-        } else {
+        if (update.getMessage() == null) {
             log.debug("No message in update");
             return;
         }
+        chatId = update.getMessage().getChatId();
+        messageText = Objects.requireNonNullElse(update.getMessage().getText(), "");
 
         try {
             List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText);
