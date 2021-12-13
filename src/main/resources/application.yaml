@@ -27,7 +27,6 @@ bot:
 notifications:
   thread-pool-size: ${NOTIFICATIONS_THREAD_POOL_SIZE:10}
   stored-range-sec: ${NOTIFICATIONS_STORED_RANGE_SEC:60}
-
   daily:
     staging-week: 1996-01-01
     staging-week-aux: 2029-01-01
