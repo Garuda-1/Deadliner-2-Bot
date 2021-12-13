@@ -71,6 +71,21 @@ class TaskFetchingServiceJpaTest {
     }
 
     @Test
+    @DisplayName(value = "Daily notifications in range week later fetched")
+    public void dailyNotificationInRangeWeekLaterFetched() {
+        Chat chat = createChat();
+        DailyNotification dailyNotification = createDailyNotification(chat, now.plusSeconds(storedRangeSec / 2));
+
+        now = now.plusWeeks(1);
+        Set<DailyNotification> dailyNotifications = taskFetchingService
+                .getDailyNotifications(now, now.plusSeconds(storedRangeSec));
+        assertThat(dailyNotifications).contains(dailyNotification);
+        Set<TodoNotification> todoNotifications = taskFetchingService
+                .getTodoNotifications(now.plusSeconds(storedRangeSec));
+        assertThat(todoNotifications).isEmpty();
+    }
+
+    @Test
     @DisplayName(value = "Daily notifications out of range not fetched")
     public void dailyNotificationOutOfRangeNotFetched() {
         Chat chat = createChat();
