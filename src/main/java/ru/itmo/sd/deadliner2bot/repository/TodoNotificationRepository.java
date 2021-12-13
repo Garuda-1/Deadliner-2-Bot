@@ -1,6 +1,5 @@
 package ru.itmo.sd.deadliner2bot.repository;
 
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import ru.itmo.sd.deadliner2bot.model.TodoNotification;
@@ -12,8 +11,4 @@ public interface TodoNotificationRepository extends CrudRepository<TodoNotificat
 
     @Query(value = "SELECT * FROM todo_notifications WHERE notification_time < ?", nativeQuery = true)
     Set<TodoNotification> findAllBeforeTimeLimit(LocalDateTime timeLimit);
-
-    @Modifying
-    @Query(value = "DELETE FROM todo_notifications WHERE notification_time < ?", nativeQuery = true)
-    void removeAllBeforeTimeLimit(LocalDateTime timeLimit);
 }

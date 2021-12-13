@@ -5,13 +5,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.stereotype.Component;
 import ru.itmo.sd.deadliner2bot.dto.TodoDto;
+import ru.itmo.sd.deadliner2bot.model.Todo;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Properties;
-import java.util.StringJoiner;
+import java.util.*;
 
 @Component
 public class MessageFormatter {
@@ -35,15 +33,15 @@ public class MessageFormatter {
         return lines.toString();
     }
 
-    public String todoNotificationMessage(TodoDto todoDto) {
+    public String todoNotificationMessage(Todo todo) {
         StringJoiner lines = new StringJoiner("\n");
         lines.add(messageTemplatesProperties.getProperty("todo-notifications-header"));
-        if (todoDto.getEndTime() != null) {
+        if (todo.getEndTime() != null) {
             lines.add(String.format(messageTemplatesProperties.getProperty("todo-notifications-todo-fmt-with-deadline"),
-                    todoDto.getEndTime().toString(), todoDto.getName()));
+                    todo.getEndTime().toString(), todo.getName()));
         } else {
             lines.add(String.format(messageTemplatesProperties.getProperty("todo-notifications-todo-fmt"),
-                    todoDto.getName()));
+                    todo.getName()));
         }
         return lines.toString();
     }

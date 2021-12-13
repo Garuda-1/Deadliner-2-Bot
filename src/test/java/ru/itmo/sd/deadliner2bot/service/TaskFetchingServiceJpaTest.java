@@ -63,7 +63,22 @@ class TaskFetchingServiceJpaTest {
         DailyNotification dailyNotification = createDailyNotification(chat, now.plusSeconds(storedRangeSec / 2));
 
         Set<DailyNotification> dailyNotifications = taskFetchingService
-                .getDailyNotifications(now.plusSeconds(storedRangeSec));
+                .getDailyNotifications(now, now.plusSeconds(storedRangeSec));
+        assertThat(dailyNotifications).contains(dailyNotification);
+        Set<TodoNotification> todoNotifications = taskFetchingService
+                .getTodoNotifications(now.plusSeconds(storedRangeSec));
+        assertThat(todoNotifications).isEmpty();
+    }
+
+    @Test
+    @DisplayName(value = "Daily notifications in range week later fetched")
+    public void dailyNotificationInRangeWeekLaterFetched() {
+        Chat chat = createChat();
+        DailyNotification dailyNotification = createDailyNotification(chat, now.plusSeconds(storedRangeSec / 2));
+
+        now = now.plusWeeks(1);
+        Set<DailyNotification> dailyNotifications = taskFetchingService
+                .getDailyNotifications(now, now.plusSeconds(storedRangeSec));
         assertThat(dailyNotifications).contains(dailyNotification);
         Set<TodoNotification> todoNotifications = taskFetchingService
                 .getTodoNotifications(now.plusSeconds(storedRangeSec));
@@ -77,7 +92,21 @@ class TaskFetchingServiceJpaTest {
         createDailyNotification(chat, now.plusSeconds(2L * storedRangeSec));
 
         Set<DailyNotification> dailyNotifications = taskFetchingService
-                .getDailyNotifications(now.plusSeconds(storedRangeSec));
+                .getDailyNotifications(now, now.plusSeconds(storedRangeSec));
+        assertThat(dailyNotifications).isEmpty();
+        Set<TodoNotification> todoNotifications = taskFetchingService
+                .getTodoNotifications(now.plusSeconds(storedRangeSec));
+        assertThat(todoNotifications).isEmpty();
+    }
+
+    @Test
+    @DisplayName(value = "Daily notifications on other day of week not fetched")
+    public void dailyNotificationOnOtherDayOfWeekNotFetched() {
+        Chat chat = createChat();
+        createDailyNotification(chat, now.plusDays(1));
+
+        Set<DailyNotification> dailyNotifications = taskFetchingService
+                .getDailyNotifications(now, now.plusSeconds(storedRangeSec));
         assertThat(dailyNotifications).isEmpty();
         Set<TodoNotification> todoNotifications = taskFetchingService
                 .getTodoNotifications(now.plusSeconds(storedRangeSec));
@@ -91,7 +120,7 @@ class TaskFetchingServiceJpaTest {
         TodoNotification todoNotification = createTodoWithNotification(chat, now.plusSeconds(storedRangeSec / 2));
 
         Set<DailyNotification> dailyNotifications = taskFetchingService
-                .getDailyNotifications(now.plusSeconds(storedRangeSec));
+                .getDailyNotifications(now, now.plusSeconds(storedRangeSec));
         assertThat(dailyNotifications).isEmpty();
         Set<TodoNotification> todoNotifications = taskFetchingService
                 .getTodoNotifications(now.plusSeconds(storedRangeSec));
@@ -105,7 +134,7 @@ class TaskFetchingServiceJpaTest {
         createTodoWithNotification(chat, now.plusSeconds(2L * storedRangeSec));
 
         Set<DailyNotification> dailyNotifications = taskFetchingService
-                .getDailyNotifications(now.plusSeconds(storedRangeSec));
+                .getDailyNotifications(now, now.plusSeconds(storedRangeSec));
         assertThat(dailyNotifications).isEmpty();
         Set<TodoNotification> todoNotifications = taskFetchingService
                 .getTodoNotifications(now.plusSeconds(storedRangeSec));
@@ -119,9 +148,8 @@ class TaskFetchingServiceJpaTest {
         LocalDateTime notificationTime = now.plusSeconds(storedRangeSec / 2);
         createDailyNotification(chat, notificationTime);
 
-        taskFetchingService.fetchNotifications();
+        taskFetchingService.fetchNotifications(now);
 
-        assertThat(dailyNotificationRepository.findAllBeforeTimeLimit(now.plusSeconds(storedRangeSec))).isEmpty();
         ArgumentCaptor<TaskFetchingService.DailyNotificationRunnable> argumentCaptor =
                 ArgumentCaptor.forClass(TaskFetchingService.DailyNotificationRunnable.class);
         verify(threadPoolTaskScheduler, times(1))
@@ -140,9 +168,8 @@ class TaskFetchingServiceJpaTest {
         LocalDateTime notificationTime = now.plusSeconds(storedRangeSec / 2);
         createTodoWithNotification(chat, notificationTime);
 
-        taskFetchingService.fetchNotifications();
+        taskFetchingService.fetchNotifications(now);
 
-        assertThat(dailyNotificationRepository.findAllBeforeTimeLimit(now.plusSeconds(storedRangeSec))).isEmpty();
         ArgumentCaptor<TaskFetchingService.TodoNotificationRunnable> argumentCaptor =
                 ArgumentCaptor.forClass(TaskFetchingService.TodoNotificationRunnable.class);
         verify(threadPoolTaskScheduler, times(1))
@@ -152,6 +179,7 @@ class TaskFetchingServiceJpaTest {
         TaskFetchingService.TodoNotificationRunnable runnable = argumentCaptor.getValue();
         runnable.run();
         verify(bot, times(1)).sendMessage(eq(chat.getChatId()), any());
+        assertThat(todoNotificationRepository.findAllBeforeTimeLimit(now.plusSeconds(storedRangeSec))).isEmpty();
     }
 
     private Chat createChat() {
