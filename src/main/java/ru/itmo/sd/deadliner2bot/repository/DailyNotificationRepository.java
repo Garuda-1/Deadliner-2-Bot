@@ -10,11 +10,10 @@ import java.util.Set;
 public interface DailyNotificationRepository extends CrudRepository<DailyNotification, Long> {
 
     @Query(value = "SELECT * FROM daily_notifications " +
-            "WHERE EXTRACT(HOUR FROM notification_time) = EXTRACT(HOUR FROM CAST(?1 AS TIMESTAMP))" +
-            "AND EXTRACT(MINUTE FROM notification_time) >= EXTRACT(MINUTE FROM CAST(?1 AS TIMESTAMP))" +
-            "AND EXTRACT(HOUR FROM notification_time) = EXTRACT(HOUR FROM CAST(?2 AS TIMESTAMP))" +
-            "AND EXTRACT(MINUTE FROM notification_time) < EXTRACT(MINUTE FROM CAST(?2 AS TIMESTAMP))" +
-            "AND EXTRACT(ISODOW FROM notification_time) = EXTRACT(ISODOW FROM CAST(?1 AS TIMESTAMP))",
+            "WHERE (CAST(EXTRACT(EPOCH FROM notification_time) AS INTEGER) % (7 * 24 * 60 * 60)) >= " +
+            "(CAST(EXTRACT(EPOCH FROM CAST(?1 AS TIMESTAMP)) AS INTEGER) % (7 * 24 * 60 * 60))" +
+            "AND (CAST(EXTRACT(EPOCH FROM notification_time) AS INTEGER) % (7 * 24 * 60 * 60)) < " +
+            "(CAST(EXTRACT(EPOCH FROM CAST(?2 AS TIMESTAMP)) AS INTEGER) % (7 * 24 * 60 * 60))",
             nativeQuery = true)
     Set<DailyNotification> findAllBeforeTimeLimitOnCurrentWeekday(LocalDateTime now, LocalDateTime limit);
 
