@@ -8,67 +8,70 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
+import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
+import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class BaseState implements ChatState {
 
+    private static final ChatStateEnum chatStateEnum = ChatStateEnum.BASE_STATE;
+
     private final ChatRepository chatRepository;
-    private final ChatStateEnum chatStateEnum = ChatStateEnum.BASE_STATE;
     private final TodoService todoService;
+    private final MessageFormatter messageFormatter;
     private final MessageUtils messageUtils;
+    private final Commands commands;
+    private final StateMessages stateMessages;
+    private Map<String, CommandInfo> commandsInfo;
+
+    @PostConstruct
+    public void postConstruct() {
+        commandsInfo = commands.loadAllCommandsInfo(getChatStateEnum(), List.of(
+                "show-todos-for-today",
+                "select-todo",
+                "create-new-todo",
+                "change-notification-plan"
+        ));
+    }
 
     @Override
     public List<BotApiMethod<?>> process(Chat chat, String message) {
         List<BotApiMethod<?>> response = new ArrayList<>();
-        if (message.startsWith("/show_todos_for_today")) {
-            String todos = formatTodos(todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now()), true);
-            response.add(messageUtils.createMessage(chat, "Todos for today: \n" + todos));
+        if (commandsInfo.get("show-todos-for-today").testMessageForCommand(message)) {
+            List<Todo> notCompletedTodos = todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
+            String notCompletedTodosText = messageFormatter.notCompletedTodos(notCompletedTodos, stateMessages.getMessageByKey(chatStateEnum, "active-todos-header"), false);
+            response.add(messageUtils.createMessage(chat, notCompletedTodosText));
             return response;
-        } else if (message.startsWith("/select_todo")) {
-            chat.setState(ChatStateEnum.SELECT_TODO);
+        } else if (commandsInfo.get("select-todo").testMessageForCommand(message)) {
+            chat.setState(ChatStateEnum.SELECT_TODO_STATE);
             chatRepository.save(chat);
-            response.add(messageUtils.createMessage(chat, "Your Todos:"));
-            response.add(messageUtils.createMessage(chat,
-                    formatTodos(todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now()), false)));
-            response.add(messageUtils.createMessage(chat, "\nPlease enter todo number"));
+            List<Todo> notCompletedTodos = todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
+            String notCompletedTodosText = messageFormatter.notCompletedTodos(notCompletedTodos, null, true);
+            response.add(messageUtils.createMessage(chat, notCompletedTodosText));
+            response.add(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "select-todos-request")));
             return response;
-        } else if (message.startsWith("/create_new_todo")) {
-            chat.setState(ChatStateEnum.ADD_NAME);
+        } else if (commandsInfo.get("create-new-todo").testMessageForCommand(message)) {
+            chat.setState(ChatStateEnum.ADD_NAME_STATE);
             chatRepository.save(chat);
-            response.add(messageUtils.createMessage(chat, "Please enter name"));
+            response.add(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "enter-new-todo-name")));
             return response;
-        } else if (message.startsWith("/help")) {
-            response.add(messageUtils.createMessage(chat, "This is help!"));
-            return response;
-        } else if (message.startsWith("/change_notification_plan")) {
-            chat.setState(ChatStateEnum.SELECT_DAYS);
+        } else if (commandsInfo.get("change-notification-plan").testMessageForCommand(message)) {
+            chat.setState(ChatStateEnum.SELECT_DAYS_STATE);
             chatRepository.save(chat);
-            response.add(messageUtils.createMessage(chat, "Please enter days of notifications"));
+            response.add(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "enter-new-daily-notification-weekdays")));
             return response;
         }
         return null;
-    }
-
-    private String formatTodos(List<Todo> todos, boolean withDescription) {
-        StringBuilder stringBuilder = new StringBuilder();
-        if (withDescription) {
-            todos.forEach(todo -> stringBuilder.append(todo.getTodoId())
-                    .append(") ")
-                    .append("**")
-                    .append(todo.getName())
-                    .append("**")
-                    .append(todo.getDescription() == null ? "" : '\n' + todo.getDescription())
-                    .append('\n'));
-        } else {
-            todos.forEach(todo -> stringBuilder.append(todo.getTodoId()).append(") ").append(todo.getName()).append('\n'));
-        }
-        return stringBuilder.toString();
     }
 
     @Override

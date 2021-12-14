@@ -5,13 +5,18 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import ru.itmo.sd.deadliner2bot.model.*;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
-import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
+import ru.itmo.sd.deadliner2bot.service.TodoNotificationService;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
+import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
+import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
 import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateTimeFormat;
@@ -20,44 +25,52 @@ import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateTimeFormat
 @RequiredArgsConstructor
 public class AddTodoNotificationState implements ChatState {
 
+    private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_TODO_NOTIFICATION_STATE;
+
     private final ChatRepository chatRepository;
-    private final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_TODO_NOTIFICATION;
     private final MessageUtils messageUtils;
     private final DateTimeUtils dateTimeUtils;
     private final TodoService todoService;
-    //Todo: change to service
-    private final TodoNotificationRepository repository;
+    private final TodoNotificationService todoNotificationService;
+    private final Commands commands;
+    private final StateMessages stateMessages;
+    private Map<String, CommandInfo> commandsInfo;
+
+    @PostConstruct
+    public void postConstruct() {
+        commandsInfo = commands.loadAllCommandsInfo(getChatStateEnum(), List.of(
+                "cancel"
+        ));
+    }
 
     @Override
     public List<BotApiMethod<?>> process(Chat chat, String message) {
         Optional<Todo> todo = todoService.findSelectedTodoByChatId(chat.getChatId());
-        if (message.startsWith("/cancel")) {
+        if (commandsInfo.get("cancel").testMessageForCommand(message)) {
+            chat.setState(ChatStateEnum.EDIT_TODO_STATE);
+            chatRepository.save(chat);
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
+        } else if (message.startsWith("/")) {
+            return null;
+        }
+
+        if (todo.isEmpty()) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            if (todo.isPresent()) {
-                todo.get().setSelected(false);
-                todoService.save(todo.get());
-            }
-            return List.of(messageUtils.createMessage(chat, "Operation canceled."));
-        } else {
-            if (todo.isEmpty()) {
-                chat.setState(ChatStateEnum.BASE_STATE);
-                chatRepository.save(chat);
-                return List.of(messageUtils.createMessage(chat, "No todo selected, cancelled."));
-            } else {
-                LocalDateTime dateTime = dateTimeUtils.parseDateTime(message);
-                if (dateTime == null) {
-                    return List.of(messageUtils.createMessage(chat, "Invalid date or time, use format: " + dateTimeFormat));
-                }
-                chat.setState(ChatStateEnum.EDIT_TODO);
-                chatRepository.save(chat);
-                TodoNotification todoNotification = new TodoNotification();
-                todoNotification.setNotificationTime(dateTime);
-                todoNotification.setTodo(todo.get());
-                repository.save(todoNotification);
-                return List.of(messageUtils.createMessage(chat, "Todo notification date and time is set to " + dateTime));
-            }
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "no-todo-selected")));
         }
+
+        LocalDateTime dateTime = dateTimeUtils.parseDateTime(message);
+        if (dateTime == null) {
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-date-time-format", dateTimeFormat)));
+        }
+        chat.setState(ChatStateEnum.EDIT_TODO_STATE);
+        chatRepository.save(chat);
+        TodoNotification todoNotification = new TodoNotification();
+        todoNotification.setNotificationTime(dateTime);
+        todoNotification.setTodo(todo.get());
+        todoNotificationService.save(todoNotification);
+        return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "todo-notification-time-set", dateTime)));
     }
 
     @Override
