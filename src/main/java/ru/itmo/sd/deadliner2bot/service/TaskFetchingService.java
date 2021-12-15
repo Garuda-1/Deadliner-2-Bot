@@ -82,7 +82,7 @@ public class TaskFetchingService {
             log.debug("Sending daily notification for chat {}", chatId);
             Set<Todo> todos = todoRepository.findAllTodosForDailyNotificationByChatId(chatId, notificationTime);
             String message = messageFormatter.notCompletedTodos(new ArrayList<>(todos));
-            bot.sendMessage(chatId, message);
+            bot.sendMarkdownMessage(chatId, message);
         }
     }
 
@@ -98,7 +98,7 @@ public class TaskFetchingService {
             log.debug("Sending todo notification for chat {}", chatId);
             String message = messageFormatter.todoNotificationMessage(todo);
             todoNotificationRepository.delete(todoNotification);
-            bot.sendMessage(chatId, message);
+            bot.sendMarkdownMessage(chatId, message);
         }
     }
 }
