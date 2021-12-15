@@ -9,7 +9,7 @@ import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoRepository;
 import ru.itmo.sd.deadliner2bot.service.TaskFetchingService;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageFormatter;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
 
 @TestConfiguration
 public class ServiceTestConfiguration {

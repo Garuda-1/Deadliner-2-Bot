@@ -39,7 +39,7 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
             return;
         }
         chatId = update.getMessage().getChatId();
-        messageText = Objects.requireNonNullElse(update.getMessage().getText(), "");
+        messageText = Objects.requireNonNullElse(update.getMessage().getText(), "").trim();
 
         try {
             List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText);
@@ -57,11 +57,12 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
     }
 
     @Override
-    public void sendMessage(long chatId, String message) {
+    public void sendMarkdownMessage(long chatId, String message) {
         try {
             execute(SendMessage.builder()
                     .chatId(Long.toString(chatId))
                     .text(message)
+                    .parseMode("markdown")
                     .build());
         } catch (TelegramApiException e) {
             log.warn("Failed to send message to chat_id = " + chatId + "\n", e);

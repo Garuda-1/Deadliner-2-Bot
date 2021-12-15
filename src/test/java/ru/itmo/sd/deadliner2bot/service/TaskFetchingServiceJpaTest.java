@@ -158,7 +158,7 @@ class TaskFetchingServiceJpaTest {
 
         TaskFetchingService.DailyNotificationRunnable runnable = argumentCaptor.getValue();
         runnable.run();
-        verify(bot, times(1)).sendMessage(eq(chat.getChatId()), any());
+        verify(bot, times(1)).sendMarkdownMessage(eq(chat.getChatId()), any());
     }
 
     @Test
@@ -178,7 +178,7 @@ class TaskFetchingServiceJpaTest {
 
         TaskFetchingService.TodoNotificationRunnable runnable = argumentCaptor.getValue();
         runnable.run();
-        verify(bot, times(1)).sendMessage(eq(chat.getChatId()), any());
+        verify(bot, times(1)).sendMarkdownMessage(eq(chat.getChatId()), any());
         assertThat(todoNotificationRepository.findAllBeforeTimeLimit(now.plusSeconds(storedRangeSec))).isEmpty();
     }
 

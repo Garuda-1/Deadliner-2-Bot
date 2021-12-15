@@ -14,15 +14,22 @@ public class MessageUtils {
     private final InputFile defaultResponse = new InputFile(
             "CAACAgIAAxkBAAMRYbJM3wABmFg_wMNH_vYufdrHebfXAAK4AAMTF8olDES8JhyUUCMjBA");
 
-
     public BotApiMethod<Message> createMessage(Chat chat, String response) {
-        return createMessage(chat.getChatId(), response);
+        return createMarkdownMessage(chat.getChatId(), response);
     }
 
     public BotApiMethod<Message> createMessage(long chatId, String response) {
         return SendMessage.builder()
                 .chatId(Long.toString(chatId))
                 .text(response)
+                .build();
+    }
+
+    public BotApiMethod<Message> createMarkdownMessage(long chatId, String response) {
+        return SendMessage.builder()
+                .chatId(Long.toString(chatId))
+                .text(response)
+                .parseMode("markdown")
                 .build();
     }
 

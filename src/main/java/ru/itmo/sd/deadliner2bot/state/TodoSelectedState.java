@@ -8,9 +8,14 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
+import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
+import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -18,37 +23,49 @@ import java.util.Optional;
 public class TodoSelectedState implements ChatState {
 
     private final ChatRepository chatRepository;
-    private final ChatStateEnum chatStateEnum = ChatStateEnum.TODO_SELECTED;
+    private final ChatStateEnum chatStateEnum = ChatStateEnum.TODO_SELECTED_STATE;
     private final TodoService todoService;
     private final MessageUtils messageUtils;
+    private final Commands commands;
+    private final StateMessages stateMessages;
+    private Map<String, CommandInfo> commandsInfo;
+
+    @PostConstruct
+    public void postConstruct() {
+        commandsInfo = commands.loadAllCommandsInfo(getChatStateEnum(), List.of(
+                "cancel",
+                "mark-todo-done",
+                "edit-todo"
+        ));
+    }
 
     @Override
     public List<BotApiMethod<?>> process(Chat chat, String message) {
         Optional<Todo> todoOptional = todoService.findSelectedTodoByChatId(chat.getChatId());
-        if (message.startsWith("/cancel")) {
+        if (commandsInfo.get("cancel").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
             if (todoOptional.isPresent()) {
                 todoOptional.get().setSelected(false);
                 todoService.save(todoOptional.get());
             }
-            return List.of(messageUtils.createMessage(chat, "Operation canceled."));
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
         } else if (todoOptional.isEmpty()) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, "No todo selected, cancelled."));
-        } else if (message.startsWith("/mark_todo_done")) {
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "no-todo-selected")));
+        } else if (commandsInfo.get("mark-todo-done").testMessageForCommand(message)) {
             Todo todo = todoOptional.get();
             todo.setSelected(false);
-            todo.setCompleted(!todo.isCompleted());
+            todo.setCompleted(true);
             todoService.save(todo);
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, "Operation not marked as done (unsupported)"));
-        } else if (message.startsWith("/edit_todo")) {
-            chat.setState(ChatStateEnum.EDIT_TODO);
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "todo-marked-done")));
+        } else if (commandsInfo.get("edit-todo").testMessageForCommand(message)) {
+            chat.setState(ChatStateEnum.EDIT_TODO_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, "What do you want to edit?"));
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "start-editing")));
         }
         return null;
     }
@@ -57,5 +74,4 @@ public class TodoSelectedState implements ChatState {
     public ChatStateEnum getChatStateEnum() {
         return chatStateEnum;
     }
-
 }

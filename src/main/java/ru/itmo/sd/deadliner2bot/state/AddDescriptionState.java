@@ -8,48 +8,65 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
+import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
+import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class AddDescriptionState implements ChatState {
 
+    private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_DESCRIPTION_STATE;
+
     private final ChatRepository chatRepository;
-    private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_DESCRIPTION;
     private final TodoService todoService;
     private final MessageUtils messageUtils;
+    private final Commands commands;
+    private final StateMessages stateMessages;
+    private Map<String, CommandInfo> commandsInfo;
+
+    @PostConstruct
+    public void postConstruct() {
+        commandsInfo = commands.loadAllCommandsInfo(getChatStateEnum(), List.of(
+                "cancel"
+        ));
+    }
 
     @Override
     public List<BotApiMethod<?>> process(Chat chat, String message) {
         Optional<Todo> todo = todoService.findSelectedTodoByChatId(chat.getChatId());
-        if (message.startsWith("/cancel")) {
-            chat.setState(ChatStateEnum.BASE_STATE);
+        if (commandsInfo.get("cancel").testMessageForCommand(message)) {
+            chat.setState(ChatStateEnum.EDIT_TODO_STATE);
             chatRepository.save(chat);
             if (todo.isPresent()) {
                 todo.get().setSelected(false);
                 todoService.save(todo.get());
             }
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
+        } else if (message.startsWith("/")) {
+            return null;
+        }
 
-            return List.of(messageUtils.createMessage(chat, "Operation canceled."));
+        if (todo.isEmpty()) {
+            chat.setState(ChatStateEnum.BASE_STATE);
+            chatRepository.save(chat);
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "no-todo-selected")));
+        }
+
+        if (validateDescription(message)) {
+            todo.get().setDescription(message);
+            todoService.save(todo.get());
+            chat.setState(ChatStateEnum.EDIT_TODO_STATE);
+            chatRepository.save(chat);
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "todo-description-added")));
         } else {
-            if (todo.isEmpty()) {
-                chat.setState(ChatStateEnum.BASE_STATE);
-                chatRepository.save(chat);
-                return List.of(messageUtils.createMessage(chat, "No todo selected, cancelled."));
-            } else {
-                if (validateDescription(message)) {
-                    todo.get().setDescription(message);
-                    todoService.save(todo.get());
-                    chat.setState(ChatStateEnum.EDIT_TODO);
-                    chatRepository.save(chat);
-                    return List.of(messageUtils.createMessage(chat, "Todo description added: " + message));
-                } else {
-                    return List.of(messageUtils.createMessage(chat, "Invalid description"));
-                }
-            }
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-description")));
         }
     }
 

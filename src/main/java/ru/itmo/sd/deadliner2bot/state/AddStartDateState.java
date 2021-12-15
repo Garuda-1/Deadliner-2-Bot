@@ -8,11 +8,16 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
+import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
+import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
 import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateFormat;
@@ -21,39 +26,48 @@ import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateFormat;
 @RequiredArgsConstructor
 public class AddStartDateState implements ChatState {
 
+    private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_START_DATE_STATE;
+
     private final ChatRepository chatRepository;
-    private final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_START_DATE;
     private final MessageUtils messageUtils;
     private final DateTimeUtils dateTimeUtils;
     private final TodoService todoService;
+    private final Commands commands;
+    private final StateMessages stateMessages;
+    private Map<String, CommandInfo> commandsInfo;
+
+    @PostConstruct
+    public void postConstruct() {
+        commandsInfo = commands.loadAllCommandsInfo(getChatStateEnum(), List.of(
+                "cancel"
+        ));
+    }
 
     @Override
     public List<BotApiMethod<?>> process(Chat chat, String message) {
         Optional<Todo> todo = todoService.findSelectedTodoByChatId(chat.getChatId());
-        if (message.startsWith("/cancel")) {
+        if (commandsInfo.get("cancel").testMessageForCommand(message)) {
+            chat.setState(ChatStateEnum.EDIT_TODO_STATE);
+            chatRepository.save(chat);
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
+        } else if (message.startsWith("/")) {
+            return null;
+        }
+
+        if (todo.isEmpty()) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            if (todo.isPresent()) {
-                todo.get().setSelected(false);
-                todoService.save(todo.get());
-            }
-            return List.of(messageUtils.createMessage(chat, "Operation canceled."));
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "no-todo-selected")));
+        }
+
+        LocalDateTime date = dateTimeUtils.parseDate(message);
+        if (date != null) {
+            chat.setState(ChatStateEnum.EDIT_TODO_STATE);
+            chatRepository.save(chat);
+            todo.get().setStartTime(date);
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "todo-end-date-set", date)));
         } else {
-            if (todo.isEmpty()) {
-                chat.setState(ChatStateEnum.BASE_STATE);
-                chatRepository.save(chat);
-                return List.of(messageUtils.createMessage(chat, "No todo selected, cancelled."));
-            } else {
-                LocalDateTime date = dateTimeUtils.parseDate(message);
-                if (date != null) {
-                    chat.setState(ChatStateEnum.EDIT_TODO);
-                    chatRepository.save(chat);
-                    todo.get().setStartTime(date);
-                    return List.of(messageUtils.createMessage(chat, "Todo start date set to " + date));
-                } else {
-                    return List.of(messageUtils.createMessage(chat, "Invalid date, format: " + dateFormat));
-                }
-            }
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-date-format", dateFormat)));
         }
     }
 

@@ -8,21 +8,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import ru.itmo.sd.deadliner2bot.bot.Bot;
-import ru.itmo.sd.deadliner2bot.dto.TodoDto;
 import ru.itmo.sd.deadliner2bot.model.DailyNotification;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.model.TodoNotification;
 import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoRepository;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageFormatter;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,15 +81,8 @@ public class TaskFetchingService {
         public void run() {
             log.debug("Sending daily notification for chat {}", chatId);
             Set<Todo> todos = todoRepository.findAllTodosForDailyNotificationByChatId(chatId, notificationTime);
-            List<TodoDto> todoDtos = todos.stream()
-                    .map(todo -> TodoDto.builder()
-                            .name(todo.getName())
-                            .startTime(todo.getStartTime())
-                            .endTime(todo.getEndTime())
-                            .build())
-                    .collect(Collectors.toList());
-            String message = messageFormatter.dailyNotificationMessage(todoDtos);
-            bot.sendMessage(chatId, message);
+            String message = messageFormatter.notCompletedTodos(new ArrayList<>(todos));
+            bot.sendMarkdownMessage(chatId, message);
         }
     }
 
@@ -107,7 +98,7 @@ public class TaskFetchingService {
             log.debug("Sending todo notification for chat {}", chatId);
             String message = messageFormatter.todoNotificationMessage(todo);
             todoNotificationRepository.delete(todoNotification);
-            bot.sendMessage(chatId, message);
+            bot.sendMarkdownMessage(chatId, message);
         }
     }
 }

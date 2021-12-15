@@ -8,49 +8,67 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
+import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
+import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
+import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
 import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class AddNameState implements ChatState {
 
+    private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_NAME_STATE;
+
     private final ChatRepository chatRepository;
-    private final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_NAME;
     private final TodoService todoService;
     private final MessageUtils messageUtils;
+    private final Commands commands;
+    private final StateMessages stateMessages;
+    private Map<String, CommandInfo> commandsInfo;
+
+    @PostConstruct
+    public void postConstruct() {
+        commandsInfo = commands.loadAllCommandsInfo(getChatStateEnum(), List.of(
+                "cancel"
+        ));
+    }
 
     @Override
     public List<BotApiMethod<?>> process(Chat chat, String message) {
-        if (message.startsWith("/cancel")) {
+        if (commandsInfo.get("cancel").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, "Operation canceled"));
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
+        } else if (message.startsWith("/")) {
+            return null;
+        }
+
+        if (!validateName(message)) {
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-name")));
+        }
+
+        Optional<Todo> todoOptional = todoService.findSelectedTodoByChatId(chat.getChatId());
+        Todo todo;
+        if (todoOptional.isPresent()) {
+            todo = todoOptional.get();
         } else {
-            if (validateName(message)) {
-                Optional<Todo> todoOptional = todoService.findSelectedTodoByChatId(chat.getChatId());
-                Todo todo;
-                if (todoOptional.isPresent()) {
-                    todo = todoOptional.get();
-                } else {
-                    todo = new Todo();
-                    todo.setChat(chat);
-                    todo.setSelected(true);
-                }
-                todo.setName(message);
-                todoService.save(todo);
-                chat.setState(ChatStateEnum.EDIT_TODO);
-                chatRepository.save(chat);
-                if (todoOptional.isPresent()) {
-                    return List.of(messageUtils.createMessage(chat, "Todo name changed to " + message));
-                } else {
-                    return List.of(messageUtils.createMessage(chat, "New todo saved with name " + message));
-                }
-            } else {
-                return List.of(messageUtils.createMessage(chat, "Invalid name"));
-            }
+            todo = new Todo();
+            todo.setChat(chat);
+            todo.setSelected(true);
+        }
+        todo.setName(message);
+        todoService.save(todo);
+        chat.setState(ChatStateEnum.EDIT_TODO_STATE);
+        chatRepository.save(chat);
+        if (todoOptional.isPresent()) {
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "name-changed", message)));
+        } else {
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "new-todo-name", message)));
         }
     }
 

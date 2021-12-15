@@ -4,5 +4,5 @@ import org.telegram.telegrambots.meta.generics.LongPollingBot;
 
 public interface Bot extends LongPollingBot {
 
-    void sendMessage(long chatId, String message);
+    void sendMarkdownMessage(long chatId, String message);
 }
