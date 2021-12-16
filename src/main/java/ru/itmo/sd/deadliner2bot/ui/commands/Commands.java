@@ -39,9 +39,9 @@ public class Commands {
                 throw new RuntimeException("Unknown state of command: " + keyString);
             }
             if ("cmd".equals(keyParts[2])) {
-                commandsWithCmd.add(keyParts[1]);
+                commandsWithCmd.add(keyParts[0] + "." + keyParts[1]);
             } else if ("description".equals(keyParts[2])) {
-                commandsWithDescription.add(keyParts[1]);
+                commandsWithDescription.add(keyParts[0] + "." + keyParts[1]);
             } else {
                 throw new RuntimeException("Unexpected property: " + keyString);
             }
