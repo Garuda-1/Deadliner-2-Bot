@@ -65,6 +65,7 @@ public class AddStartDateState implements ChatState {
             chat.setState(ChatStateEnum.EDIT_TODO_STATE);
             chatRepository.save(chat);
             todo.get().setStartTime(date);
+            todoService.save(todo.get());
             return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "todo-end-date-set", date)));
         } else {
             return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-date-format", dateFormat)));
