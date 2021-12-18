@@ -48,27 +48,42 @@ public class BaseState implements ChatState {
     public List<BotApiMethod<?>> process(Chat chat, String message) {
         List<BotApiMethod<?>> response = new ArrayList<>();
         if (commandsInfo.get("show-todos-for-today").testMessageForCommand(message)) {
-            List<Todo> notCompletedTodos = todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
-            String notCompletedTodosText = messageFormatter.notCompletedTodos(notCompletedTodos, stateMessages.getMessageByKey(chatStateEnum, "active-todos-header"), false);
-            response.add(messageUtils.createMessage(chat, notCompletedTodosText));
+            List<Todo> notCompletedTodos =
+                    todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
+            String responseMessage;
+            if (notCompletedTodos.isEmpty()) {
+                responseMessage = stateMessages.getMessageByKey(chatStateEnum, "no-active-todos");
+            } else {
+                responseMessage = messageFormatter.notCompletedTodos(notCompletedTodos,
+                        stateMessages.getMessageByKey(chatStateEnum, "active-todos-header"), false);
+            }
+            response.add(messageUtils.createMessage(chat, responseMessage));
             return response;
         } else if (commandsInfo.get("select-todo").testMessageForCommand(message)) {
-            chat.setState(ChatStateEnum.SELECT_TODO_STATE);
-            chatRepository.save(chat);
-            List<Todo> notCompletedTodos = todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
-            String notCompletedTodosText = messageFormatter.notCompletedTodos(notCompletedTodos, null, true);
-            response.add(messageUtils.createMessage(chat, notCompletedTodosText));
-            response.add(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "select-todos-request")));
+            List<Todo> notCompletedTodos =
+                    todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
+            String responseMessage;
+            if (notCompletedTodos.isEmpty()) {
+                responseMessage = stateMessages.getMessageByKey(chatStateEnum, "no-active-todos");
+            } else {
+                responseMessage = messageFormatter.notCompletedTodos(notCompletedTodos,
+                        stateMessages.getMessageByKey(chatStateEnum, "select-todos-request"), true);
+                chat.setState(ChatStateEnum.SELECT_TODO_STATE);
+                chatRepository.save(chat);
+            }
+            response.add(messageUtils.createMessage(chat, responseMessage));
             return response;
         } else if (commandsInfo.get("create-new-todo").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.ADD_NAME_STATE);
             chatRepository.save(chat);
-            response.add(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "enter-new-todo-name")));
+            response.add(messageUtils.createMessage(chat,
+                    stateMessages.getMessageByKey(chatStateEnum, "enter-new-todo-name")));
             return response;
         } else if (commandsInfo.get("change-notification-plan").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.SELECT_DAYS_STATE);
             chatRepository.save(chat);
-            response.add(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "enter-new-daily-notification-weekdays")));
+            response.add(messageUtils.createMessage(chat,
+                    stateMessages.getMessageByKey(chatStateEnum, "enter-new-daily-notification-weekdays")));
             return response;
         }
         return null;
