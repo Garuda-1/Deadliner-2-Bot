@@ -7,9 +7,8 @@ import ru.itmo.sd.deadliner2bot.model.Chat;
 import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.state.ChatState;
-import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
-import ru.itmo.sd.deadliner2bot.ui.messages.CommonMessages;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -22,9 +21,8 @@ public class ChatStateService {
 
     private final ChatRepository chatRepository;
     private final List<ChatState> chatStateList;
-    private final MessageUtils messageUtils;
-    private final CommonMessages commonMessages;
-    private final Commands commands;
+    private final MessageSourceUtils messageSourceUtils;
+    private final MessageFormatter messageFormatter;
 
     @PostConstruct
     public void postConstruct() {
@@ -37,26 +35,30 @@ public class ChatStateService {
         }
     }
 
-    public List<BotApiMethod<?>> processMessage(long chatId, String message) {
+    public List<BotApiMethod<?>> processMessage(long chatId, String message, Locale chatLocale) {
         Optional<Chat> chatOptional = chatRepository.findById(chatId);
-        String startCommand = commonMessages.getByKey("start-command");
-        String helpCommand = commonMessages.getByKey("help-command");
+        String startCommand = messageSourceUtils.getCommonProperty("start-command");
+        String helpCommand = messageSourceUtils.getCommonProperty("help-command");
         if (chatOptional.isEmpty() && startCommand.equals(message)) {
             Chat chat = new Chat();
             chat.setChatId(chatId);
+            chat.setLanguageCode(chatLocale);
             chat.setState(ChatStateEnum.BASE_STATE);
-            chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, commonMessages.getByKey("new-user-welcome")));
+            chat = chatRepository.save(chat);
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, "new-user-welcome"));
         }
         if (chatOptional.isEmpty()) {
-            return List.of(messageUtils.createMessage(chatId, commonMessages.getByKey("chat-not-found", startCommand)));
+            return List.of(messageSourceUtils.createMarkdownMessage(chatId, "chat-not-found", chatLocale));
         }
 
         Chat chat = chatOptional.get();
+        if (!chat.getLanguageCode().equals(chatLocale)) {
+            chat.setLanguageCode(chatLocale);
+            chat = chatRepository.save(chat);
+        }
         ChatStateEnum state = chat.getState();
         if (helpCommand.equals(message)) {
-            String helpMessageText = commands.formHelpMessage(state);
-            return List.of(messageUtils.createMessage(chatId, helpMessageText));
+            return List.of(messageFormatter.stateHelpMessage(chat, state));
         }
         return chatStateMap.get(state).process(chat, message);
     }

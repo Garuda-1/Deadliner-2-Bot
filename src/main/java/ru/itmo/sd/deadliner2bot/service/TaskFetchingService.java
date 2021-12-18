@@ -8,9 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import ru.itmo.sd.deadliner2bot.bot.Bot;
-import ru.itmo.sd.deadliner2bot.model.DailyNotification;
-import ru.itmo.sd.deadliner2bot.model.Todo;
-import ru.itmo.sd.deadliner2bot.model.TodoNotification;
+import ru.itmo.sd.deadliner2bot.model.*;
 import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoRepository;
@@ -51,7 +49,7 @@ public class TaskFetchingService {
         Set<DailyNotification> dailyNotifications = getDailyNotifications(now, limit);
         dailyNotifications.forEach(dailyNotification ->
                 threadPoolTaskScheduler.schedule(new DailyNotificationRunnable(
-                                dailyNotification.getChat().getChatId(),
+                                dailyNotification.getChat(),
                                 dailyNotification.getNotificationTime()),
                         Timestamp.valueOf(dailyNotification.getNotificationTime())));
         log.info("Scheduled {} daily notifications", dailyNotifications.size());
@@ -74,15 +72,15 @@ public class TaskFetchingService {
     @RequiredArgsConstructor
     class DailyNotificationRunnable implements Runnable {
 
-        private final long chatId;
+        private final Chat chat;
         private final LocalDateTime notificationTime;
 
         @Override
         public void run() {
-            log.debug("Sending daily notification for chat {}", chatId);
-            Set<Todo> todos = todoRepository.findAllTodosForDailyNotificationByChatId(chatId, notificationTime);
-            String message = messageFormatter.notCompletedTodos(new ArrayList<>(todos));
-            bot.sendMarkdownMessage(chatId, message);
+            log.debug("Sending daily notification for chat {}", chat.getChatId());
+            Set<Todo> todos = todoRepository.findAllTodosForDailyNotificationByChatId(chat.getChatId(), notificationTime);
+            bot.sendMarkdownMessage(messageFormatter.notCompletedTodosMessage(chat, new ArrayList<>(todos),
+                    "daily-notifications-header", false));
         }
     }
 
@@ -94,11 +92,10 @@ public class TaskFetchingService {
         @Override
         public void run() {
             Todo todo = todoNotification.getTodo();
-            long chatId = todo.getChat().getChatId();
-            log.debug("Sending todo notification for chat {}", chatId);
-            String message = messageFormatter.todoNotificationMessage(todo);
+            Chat chat = todo.getChat();
+            log.debug("Sending todo notification for chat {}", chat.getChatId());
+            bot.sendMarkdownMessage(messageFormatter.todoNotificationMessage(chat, todo));
             todoNotificationRepository.delete(todoNotification);
-            bot.sendMarkdownMessage(chatId, message);
         }
     }
 }

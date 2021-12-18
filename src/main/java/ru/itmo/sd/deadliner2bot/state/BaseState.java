@@ -8,11 +8,9 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
-import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
 import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
 import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
-import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -29,10 +27,9 @@ public class BaseState implements ChatState {
     private final ChatRepository chatRepository;
     private final TodoService todoService;
     private final MessageFormatter messageFormatter;
-    private final MessageUtils messageUtils;
+    private final MessageSourceUtils messageSourceUtils;
     private final Commands commands;
-    private final StateMessages stateMessages;
-    private Map<String, CommandInfo> commandsInfo;
+    private Map<String, Commands.CommandInfo> commandsInfo;
 
     @PostConstruct
     public void postConstruct() {
@@ -50,40 +47,35 @@ public class BaseState implements ChatState {
         if (commandsInfo.get("show-todos-for-today").testMessageForCommand(message)) {
             List<Todo> notCompletedTodos =
                     todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
-            String responseMessage;
             if (notCompletedTodos.isEmpty()) {
-                responseMessage = stateMessages.getMessageByKey(chatStateEnum, "no-active-todos");
+                response.add(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-active-todos", chat));
             } else {
-                responseMessage = messageFormatter.notCompletedTodos(notCompletedTodos,
-                        stateMessages.getMessageByKey(chatStateEnum, "active-todos-header"), false);
+                response.add(messageFormatter.notCompletedTodosMessage(chat, notCompletedTodos, chatStateEnum,
+                        "active-todos-header", false));
             }
-            response.add(messageUtils.createMessage(chat, responseMessage));
             return response;
         } else if (commandsInfo.get("select-todo").testMessageForCommand(message)) {
             List<Todo> notCompletedTodos =
                     todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
-            String responseMessage;
             if (notCompletedTodos.isEmpty()) {
-                responseMessage = stateMessages.getMessageByKey(chatStateEnum, "no-active-todos");
+                response.add(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-active-todos"));
             } else {
-                responseMessage = messageFormatter.notCompletedTodos(notCompletedTodos,
-                        stateMessages.getMessageByKey(chatStateEnum, "select-todos-request"), true);
+                response.add(messageFormatter.notCompletedTodosMessage(chat, notCompletedTodos, chatStateEnum,
+                        "select-todos-request", true));
                 chat.setState(ChatStateEnum.SELECT_TODO_STATE);
                 chatRepository.save(chat);
             }
-            response.add(messageUtils.createMessage(chat, responseMessage));
             return response;
         } else if (commandsInfo.get("create-new-todo").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.ADD_NAME_STATE);
             chatRepository.save(chat);
-            response.add(messageUtils.createMessage(chat,
-                    stateMessages.getMessageByKey(chatStateEnum, "enter-new-todo-name")));
+            response.add(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-new-todo-name"));
             return response;
         } else if (commandsInfo.get("change-notification-plan").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.SELECT_DAYS_STATE);
             chatRepository.save(chat);
-            response.add(messageUtils.createMessage(chat,
-                    stateMessages.getMessageByKey(chatStateEnum, "enter-new-daily-notification-weekdays")));
+            response.add(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum,
+                    "enter-new-daily-notification-weekdays"));
             return response;
         }
         return null;

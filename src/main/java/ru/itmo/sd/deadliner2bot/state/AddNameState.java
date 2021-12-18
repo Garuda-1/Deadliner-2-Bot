@@ -8,10 +8,8 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
-import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
 import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
-import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -26,10 +24,9 @@ public class AddNameState implements ChatState {
 
     private final ChatRepository chatRepository;
     private final TodoService todoService;
-    private final MessageUtils messageUtils;
+    private final MessageSourceUtils messageSourceUtils;
     private final Commands commands;
-    private final StateMessages stateMessages;
-    private Map<String, CommandInfo> commandsInfo;
+    private Map<String, Commands.CommandInfo> commandsInfo;
 
     @PostConstruct
     public void postConstruct() {
@@ -43,13 +40,13 @@ public class AddNameState implements ChatState {
         if (commandsInfo.get("cancel").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "cancel"));
         } else if (message.startsWith("/")) {
             return null;
         }
 
         if (!validateName(message)) {
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-name")));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-name"));
         }
 
         Optional<Todo> todoOptional = todoService.findSelectedTodoByChatId(chat.getChatId());
@@ -66,9 +63,9 @@ public class AddNameState implements ChatState {
         chat.setState(ChatStateEnum.EDIT_TODO_STATE);
         chatRepository.save(chat);
         if (todoOptional.isPresent()) {
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "name-changed", message)));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "name-changed", message));
         } else {
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "new-todo-name", message)));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "new-todo-name", message));
         }
     }
 

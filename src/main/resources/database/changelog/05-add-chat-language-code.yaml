@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: dolzhanskii
+      changes:
+        - addColumn:
+            tableName: chats
+            columns:
+              - column:
+                  name: language_code
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+                  defaultValue: ""
