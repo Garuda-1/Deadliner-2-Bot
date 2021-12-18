@@ -23,7 +23,7 @@ public class DateTimeUtils {
     public static final String timeFormat = "HH:mm";
     public static final String dateTimeFormat = "dd-MM-yyyy HH:mm";
     private static final ZoneId botTimeZone = ZoneId.of("UTC+3");
-    private static final DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+    public static final DateTimeFormatter optionalFormatter = new DateTimeFormatterBuilder()
             .appendPattern(dateFormat)
             .optionalStart()
             .appendPattern(" " + timeFormat)
@@ -65,6 +65,14 @@ public class DateTimeUtils {
         return LocalDateTime.now(botTimeZone);
     }
 
+    public LocalDateTime parseDateTimeOptional(String dateTimeString) {
+        try {
+            return LocalDateTime.parse(dateTimeString, optionalFormatter);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
     public LocalDateTime getDateTimeFromDayUnconfirmed(DayOfWeek dayOfWeek) {
         return stagingWeekAuxStartDateTime.with(TemporalAdjusters.next(dayOfWeek));
     }
@@ -75,18 +83,6 @@ public class DateTimeUtils {
         date = date.plusHours(time.getHour());
         date = date.plusMinutes(time.getMinute());
         return date;
-    }
-
-    public LocalDateTime parseDate(String dateString) {
-        dateString = deleteSpaces(dateString);
-        if (dateString.length() > dateFormat.length()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(dateString, formatter);
-        } catch (DateTimeParseException e) {
-            return null;
-        }
     }
 
     public LocalTime parseTime(String timeString) {

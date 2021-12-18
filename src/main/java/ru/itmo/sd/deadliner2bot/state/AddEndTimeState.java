@@ -19,19 +19,19 @@ import java.util.Map;
 import java.util.Optional;
 
 import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateFormat;
+import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.optionalFormatter;
 
 @Component
 @RequiredArgsConstructor
-public class AddStartDateState implements ChatState {
+public class AddEndTimeState implements ChatState {
 
-    private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_START_DATE_STATE;
+    private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_END_TIME_STATE;
 
     private final ChatRepository chatRepository;
     private final MessageSourceUtils messageSourceUtils;
     private final DateTimeUtils dateTimeUtils;
     private final TodoService todoService;
     private final Commands commands;
-    //    private final StateMessages stateMessages;
     private Map<String, Commands.CommandInfo> commandsInfo;
 
     @PostConstruct
@@ -58,13 +58,13 @@ public class AddStartDateState implements ChatState {
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-todo-selected"));
         }
 
-        LocalDateTime date = dateTimeUtils.parseDate(message);
+        LocalDateTime date = dateTimeUtils.parseDateTimeOptional(message);
         if (date != null) {
             chat.setState(ChatStateEnum.EDIT_TODO_STATE);
             chatRepository.save(chat);
-            todo.get().setStartTime(date);
+            todo.get().setEndTime(date);
             todoService.save(todo.get());
-            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "todo-start-date-set", date));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "todo-end-date-set", date));
         } else {
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-date-format", dateFormat));
         }

@@ -68,11 +68,11 @@ public class EditTodoState implements ChatState {
             chatRepository.save(chat);
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-todo-description"));
         } else if (commandsInfo.get("add-start-date").testMessageForCommand(message)) {
-            chat.setState(ChatStateEnum.ADD_START_DATE_STATE);
+            chat.setState(ChatStateEnum.ADD_START_TIME_STATE);
             chatRepository.save(chat);
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-start-date"));
         } else if (commandsInfo.get("add-end-date").testMessageForCommand(message)) {
-            chat.setState(ChatStateEnum.ADD_END_DATE_STATE);
+            chat.setState(ChatStateEnum.ADD_END_TIME_STATE);
             chatRepository.save(chat);
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-end-date"));
         } else if (commandsInfo.get("add-notification").testMessageForCommand(message)) {
