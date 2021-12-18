@@ -36,8 +36,7 @@ public class EditTodoState implements ChatState {
     @PostConstruct
     public void postConstruct() {
         commandsInfo = commands.loadAllCommandsInfo(getChatStateEnum(), List.of(
-                "cancel",
-                "save-todo",
+                "finish",
                 "change-name",
                 "add-description",
                 "add-start-date",
@@ -50,24 +49,16 @@ public class EditTodoState implements ChatState {
     @Override
     public List<BotApiMethod<?>> process(Chat chat, String message) {
         Optional<Todo> todo = todoService.findSelectedTodoByChatId(chat.getChatId());
-        if (commandsInfo.get("cancel").testMessageForCommand(message)) {
-            chat.setState(ChatStateEnum.BASE_STATE);
-            chatRepository.save(chat);
-            if (todo.isPresent()) {
-                todo.get().setSelected(false);
-                todoService.save(todo.get());
-            }
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
-        } else if (todo.isEmpty()) {
+        if (todo.isEmpty()) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
             return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "no-todo-selected")));
-        } else if (commandsInfo.get("save-todo").testMessageForCommand(message)) {
+        } else if (commandsInfo.get("finish").testMessageForCommand(message)) {
             todo.get().setSelected(false);
             todoService.save(todo.get());
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "todo-saved")));
+            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "finish")));
         } else if (commandsInfo.get("change-name").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.ADD_NAME_STATE);
             chatRepository.save(chat);
