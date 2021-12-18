@@ -40,6 +40,7 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
         }
         chatId = update.getMessage().getChatId();
         messageText = Objects.requireNonNullElse(update.getMessage().getText(), "").trim();
+        log.info(update.getMessage().getChatId() + " sent: " + messageText);
 
         try {
             List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText);
