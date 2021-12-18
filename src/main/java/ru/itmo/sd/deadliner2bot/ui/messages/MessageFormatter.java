@@ -68,4 +68,16 @@ public class MessageFormatter {
         }
         return lines.toString();
     }
+
+    public String todoView(Todo todo) {
+        return MessageFormat.format(templatesProperties.getProperty("todo-view"),
+                todo.getName(),
+                Objects.requireNonNullElse(todo.getDescription(),
+                        templatesProperties.getProperty("todo-default-description")),
+                Objects.requireNonNullElse(todo.getStartTime(),
+                        templatesProperties.getProperty("todo-default-start-time")),
+                Objects.requireNonNullElse(todo.getEndTime(),
+                        templatesProperties.getProperty("todo-default-end-time")),
+                todo.isDailyNotificationsEnabled());
+    }
 }
