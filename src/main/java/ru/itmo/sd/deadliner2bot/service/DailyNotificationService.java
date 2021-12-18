@@ -21,4 +21,8 @@ public class DailyNotificationService {
     public Set<DailyNotification> findDailyNotificationsByChatStartingWithDate(long chatId, LocalDateTime startingDate) {
         return dailyNotificationRepository.findDailyNotificationsByChatStartingWithDate(chatId, startingDate);
     }
+
+    public void delete(DailyNotification notification) {
+        dailyNotificationRepository.delete(notification);
+    }
 }

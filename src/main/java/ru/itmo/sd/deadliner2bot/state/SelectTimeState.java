@@ -48,6 +48,9 @@ public class SelectTimeState implements ChatState {
         if (commandsInfo.get("cancel").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
+            Set<DailyNotification> toDelete = dailyNotificationService
+                    .findDailyNotificationsByChatStartingWithDate(chat.getChatId(), dateTimeUtils.getStagingWeekAuxStartDateTime());
+            toDelete.forEach(dailyNotificationService::delete);
             return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
         } else if (message.startsWith("/")) {
             return null;
