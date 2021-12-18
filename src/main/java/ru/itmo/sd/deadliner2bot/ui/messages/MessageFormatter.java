@@ -25,20 +25,8 @@ public class MessageFormatter {
     private final MessageSourceUtils messageSourceUtils;
 
     public BotApiMethod<Message> stateHelpMessage(Chat chat, ChatStateEnum chatStateEnum) {
-        List<String> commands = messageSource
-                .getCommonPropertiesCodes(c -> c.startsWith(chatStateEnum + ".") && c.endsWith(".cmd"))
-                .stream()
-                .sorted()
-                .map(messageSourceUtils::getCommonProperty)
-                .map(this::escape)
-                .collect(Collectors.toCollection(ArrayList::new));
-        List<String> descriptions = messageSource
-                .getCommonPropertiesCodes(c -> c.startsWith(chatStateEnum + ".") && c.endsWith(".description"))
-                .stream()
-                .sorted()
-                .map(messageSourceUtils::getCommonProperty)
-                .map(this::escape)
-                .collect(Collectors.toCollection(ArrayList::new));
+        List<String> commands = findStatePropertiesWithPrefix(chatStateEnum, ".cmd");
+        List<String> descriptions = findStatePropertiesWithPrefix(chatStateEnum, "description");
         return messageSourceUtils.createPlainMarkdownMessage(chat, IntStream.range(0, commands.size())
                 .mapToObj(i -> messageSourceUtils.getCommonProperty("help-format", commands.get(i),
                         descriptions.get(i)))
@@ -78,6 +66,16 @@ public class MessageFormatter {
         lines.add(messageSourceUtils.getLocalizedProperty(chat, "todo-notifications-header"));
         lines.add(formatTodo(chat, todo, false));
         return messageSourceUtils.createPlainMarkdownMessage(chat, lines.toString());
+    }
+
+    private List<String> findStatePropertiesWithPrefix(ChatStateEnum chatStateEnum, String prefix) {
+        return messageSource
+                .getCommonPropertiesCodes(c -> c.startsWith(chatStateEnum + ".") && c.endsWith(prefix))
+                .stream()
+                .sorted()
+                .map(messageSourceUtils::getCommonProperty)
+                .map(this::escape)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private String formatTodo(Chat chat, Todo todo, boolean showIds) {

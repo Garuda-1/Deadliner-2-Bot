@@ -31,7 +31,6 @@ public class AddTodoNotificationState implements ChatState {
     private final TodoService todoService;
     private final TodoNotificationService todoNotificationService;
     private final Commands commands;
-    //    private final StateMessages stateMessages;
     private Map<String, Commands.CommandInfo> commandsInfo;
 
     @PostConstruct
