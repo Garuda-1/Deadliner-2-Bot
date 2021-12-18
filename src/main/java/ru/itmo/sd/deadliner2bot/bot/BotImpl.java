@@ -6,13 +6,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.itmo.sd.deadliner2bot.service.ChatStateService;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Component
@@ -27,30 +28,30 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
     private String botToken;
 
     private final ChatStateService chatStateService;
-    private final MessageUtils messageUtils;
+    private final MessageSourceUtils messageSourceUtils;
 
     @Override
     public void onUpdateReceived(Update update) {
-        long chatId;
-        String messageText;
-
         if (update.getMessage() == null) {
             log.debug("No message in update");
             return;
         }
-        chatId = update.getMessage().getChatId();
-        messageText = Objects.requireNonNullElse(update.getMessage().getText(), "").trim();
+
+        long chatId = update.getMessage().getChatId();
+        String messageText = Objects.requireNonNullElse(update.getMessage().getText(), "").trim();
+        Locale chatLocale = Locale.forLanguageTag(Objects.requireNonNullElse(
+                update.getMessage().getFrom().getLanguageCode(), ""));
         log.info(update.getMessage().getChatId() + " sent: " + messageText);
 
         try {
-            List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText);
+            List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText, chatLocale);
             if (response != null && !response.isEmpty()) {
                 for (BotApiMethod<?> message : response) {
                     execute(message);
                 }
             } else {
-                execute(messageUtils.createMessage(chatId, "Message is not recognised"));
-                execute(messageUtils.getSticker(chatId));
+                execute(messageSourceUtils.createMarkdownMessage(chatId, "message-not-recognized", chatLocale));
+                execute(messageSourceUtils.getSticker(chatId));
             }
         } catch (TelegramApiException e) {
             log.debug("Failed to respond\n" + e);
@@ -58,15 +59,11 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
     }
 
     @Override
-    public void sendMarkdownMessage(long chatId, String message) {
+    public void sendMarkdownMessage(BotApiMethod<Message> message) {
         try {
-            execute(SendMessage.builder()
-                    .chatId(Long.toString(chatId))
-                    .text(message)
-                    .parseMode("markdown")
-                    .build());
+            execute(message);
         } catch (TelegramApiException e) {
-            log.warn("Failed to send message to chat_id = " + chatId + "\n", e);
+            log.warn("Failed to send message:" + message.toString() + "\n", e);
         }
     }
 

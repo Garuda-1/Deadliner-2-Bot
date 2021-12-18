@@ -8,11 +8,9 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
-import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
 import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
-import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
@@ -29,12 +27,11 @@ public class AddEndDateState implements ChatState {
     private static final ChatStateEnum chatStateEnum = ChatStateEnum.ADD_END_DATE_STATE;
 
     private final ChatRepository chatRepository;
-    private final MessageUtils messageUtils;
+    private final MessageSourceUtils messageSourceUtils;
     private final DateTimeUtils dateTimeUtils;
     private final TodoService todoService;
     private final Commands commands;
-    private final StateMessages stateMessages;
-    private Map<String, CommandInfo> commandsInfo;
+    private Map<String, Commands.CommandInfo> commandsInfo;
 
     @PostConstruct
     public void postConstruct() {
@@ -49,7 +46,7 @@ public class AddEndDateState implements ChatState {
         if (commandsInfo.get("cancel").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.EDIT_TODO_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "cancel"));
         } else if (message.startsWith("/")) {
             return null;
         }
@@ -57,7 +54,7 @@ public class AddEndDateState implements ChatState {
         if (todo.isEmpty()) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "no-todo-selected")));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-todo-selected"));
         }
 
         LocalDateTime date = dateTimeUtils.parseDate(message);
@@ -66,9 +63,9 @@ public class AddEndDateState implements ChatState {
             chatRepository.save(chat);
             todo.get().setEndTime(date);
             todoService.save(todo.get());
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "todo-end-date-set", date)));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "todo-end-date-set", date));
         } else {
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-date-format", dateFormat)));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-date-format", dateFormat));
         }
     }
 

@@ -8,10 +8,8 @@ import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
 import ru.itmo.sd.deadliner2bot.service.TodoService;
-import ru.itmo.sd.deadliner2bot.ui.commands.CommandInfo;
 import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
-import ru.itmo.sd.deadliner2bot.ui.messages.StateMessages;
-import ru.itmo.sd.deadliner2bot.utils.messages.MessageUtils;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -25,10 +23,9 @@ public class SelectTodoState implements ChatState {
     private final ChatRepository chatRepository;
     private final ChatStateEnum chatStateEnum = ChatStateEnum.SELECT_TODO_STATE;
     private final TodoService todoService;
-    private final MessageUtils messageUtils;
+    private final MessageSourceUtils messageSourceUtils;
     private final Commands commands;
-    private final StateMessages stateMessages;
-    private Map<String, CommandInfo> commandsInfo;
+    private Map<String, Commands.CommandInfo> commandsInfo;
 
     @PostConstruct
     public void postConstruct() {
@@ -42,19 +39,19 @@ public class SelectTodoState implements ChatState {
         if (commandsInfo.get("cancel").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.BASE_STATE);
             chatRepository.save(chat);
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "cancel")));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "cancel"));
         } else if (message.startsWith("/")) {
             return null;
         }
 
         Long todoId = parseNumber(message);
         if (todoId == null) {
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "invalid-id-format")));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-id-format"));
         }
 
         Optional<Todo> todoOptional = todoService.findTodoByChatIdAndTodoId(chat.getChatId(), todoId);
         if (todoOptional.isEmpty()) {
-            return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "not-found", todoId)));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "not-found", todoId));
         }
 
         Todo todo = todoOptional.get();
@@ -62,7 +59,7 @@ public class SelectTodoState implements ChatState {
         todoService.save(todo);
         chat.setState(ChatStateEnum.TODO_SELECTED_STATE);
         chatRepository.save(chat);
-        return List.of(messageUtils.createMessage(chat, stateMessages.getMessageByKey(chatStateEnum, "selected", todo.getName())));
+        return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "selected", todo.getName()));
     }
 
     private Long parseNumber(String numberString) {

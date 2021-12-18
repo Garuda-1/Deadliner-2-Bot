@@ -3,8 +3,10 @@ package ru.itmo.sd.deadliner2bot.model;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import ru.itmo.sd.deadliner2bot.model.converter.LanguageCodeToLocaleConverter;
 
 import javax.persistence.*;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -22,6 +24,10 @@ public class Chat {
     @Column(name = "state", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private ChatStateEnum state;
+
+    @Column(name = "language_code", nullable = false)
+    @Convert(converter = LanguageCodeToLocaleConverter.class)
+    private Locale languageCode = Locale.ROOT;
 
     @OneToMany(mappedBy = "chat")
     private Set<Todo> todos = new TreeSet<>();

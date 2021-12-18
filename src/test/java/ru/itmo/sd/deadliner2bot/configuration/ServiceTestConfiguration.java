@@ -9,7 +9,9 @@ import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoRepository;
 import ru.itmo.sd.deadliner2bot.service.TaskFetchingService;
+import ru.itmo.sd.deadliner2bot.ui.messages.ExposedResourceBundleMessageSource;
 import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
+import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 
 @TestConfiguration
 public class ServiceTestConfiguration {
@@ -20,8 +22,21 @@ public class ServiceTestConfiguration {
     }
 
     @Bean
-    public MessageFormatter messageFormatter() {
-        return new MessageFormatter();
+    public ExposedResourceBundleMessageSource exposedResourceBundleMessageSource() {
+        ExposedResourceBundleMessageSource messageSource = new ExposedResourceBundleMessageSource();
+        messageSource.setBasenames("classpath:/messages/messages");
+        return messageSource;
+    }
+
+    @Bean
+    public MessageSourceUtils messageUtils(ExposedResourceBundleMessageSource exposedResourceBundleMessageSource) {
+        return new MessageSourceUtils(exposedResourceBundleMessageSource);
+    }
+
+    @Bean
+    public MessageFormatter messageFormatter(ExposedResourceBundleMessageSource exposedResourceBundleMessageSource,
+                                             MessageSourceUtils messageSourceUtils) {
+        return new MessageFormatter(exposedResourceBundleMessageSource, messageSourceUtils);
     }
 
     @Bean

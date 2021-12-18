@@ -7,3 +7,5 @@ databaseChangeLog:
       file: database/changelog/03-add-chat-state.yaml
   - include:
       file: database/changelog/04-add-selected-to-todos.yaml
+  - include:
+      file: database/changelog/05-add-chat-language-code.yaml
