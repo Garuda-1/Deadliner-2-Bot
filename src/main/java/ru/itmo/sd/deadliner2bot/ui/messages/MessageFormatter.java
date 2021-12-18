@@ -40,7 +40,8 @@ public class MessageFormatter {
                 .map(this::escape)
                 .collect(Collectors.toCollection(ArrayList::new));
         return messageSourceUtils.createPlainMarkdownMessage(chat, IntStream.range(0, commands.size())
-                .mapToObj(i -> messageSourceUtils.getCommonProperty("help-format", commands.get(i), descriptions.get(i)))
+                .mapToObj(i -> messageSourceUtils.getCommonProperty("help-format", commands.get(i),
+                        descriptions.get(i)))
                 .collect(Collectors.joining("\n")));
     }
 
@@ -49,11 +50,12 @@ public class MessageFormatter {
         return notCompletedTodosMessage(chat, todos, messageSourceUtils.chatStateCode(chatStateEnum, headerCode), showIds);
     }
 
-    public BotApiMethod<Message> notCompletedTodosMessage(Chat chat, List<Todo> todos, String headerCode, boolean showIds) {
+    public BotApiMethod<Message> notCompletedTodosMessage(Chat chat, List<Todo> todos, String headerCode,
+                                                          boolean showIds) {
         StringJoiner lines = new StringJoiner("\n");
         lines.add(messageSourceUtils.getLocalizedProperty(chat, headerCode));
         todos.stream()
-                .sorted(Comparator.nullsLast(Comparator.comparing(Todo::getEndTime)))
+                .sorted(Comparator.comparing(Todo::getEndTime, Comparator.nullsLast(Comparator.naturalOrder())))
                 .forEachOrdered(todo -> lines.add(formatTodo(chat, todo, showIds)));
         return messageSourceUtils.createPlainMarkdownMessage(chat, lines.toString());
     }
