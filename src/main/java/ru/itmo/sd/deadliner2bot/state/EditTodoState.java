@@ -38,8 +38,8 @@ public class EditTodoState implements ChatState {
                 "finish",
                 "change-name",
                 "add-description",
-                "add-start-date",
-                "add-end-date",
+                "add-start-time",
+                "add-end-time",
                 "add-notification",
                 "switch-daily-notifications",
                 "view"
@@ -67,14 +67,14 @@ public class EditTodoState implements ChatState {
             chat.setState(ChatStateEnum.ADD_DESCRIPTION_STATE);
             chatRepository.save(chat);
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-todo-description"));
-        } else if (commandsInfo.get("add-start-date").testMessageForCommand(message)) {
+        } else if (commandsInfo.get("add-start-time").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.ADD_START_TIME_STATE);
             chatRepository.save(chat);
-            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-start-date"));
-        } else if (commandsInfo.get("add-end-date").testMessageForCommand(message)) {
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-start-time"));
+        } else if (commandsInfo.get("add-end-time").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.ADD_END_TIME_STATE);
             chatRepository.save(chat);
-            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-end-date"));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "enter-end-time"));
         } else if (commandsInfo.get("add-notification").testMessageForCommand(message)) {
             chat.setState(ChatStateEnum.ADD_TODO_NOTIFICATION_STATE);
             chatRepository.save(chat);

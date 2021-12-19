@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.*;
-
 @Component
 @RequiredArgsConstructor
 public class AddStartTimeState implements ChatState {
@@ -57,15 +55,17 @@ public class AddStartTimeState implements ChatState {
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-todo-selected"));
         }
 
-        LocalDateTime date = dateTimeUtils.parseDateTimeOptional(message);
-        if (date != null) {
+        LocalDateTime dateTime = dateTimeUtils.parseDateTimeOptional(chat, message);
+        if (dateTime != null) {
             chat.setState(ChatStateEnum.EDIT_TODO_STATE);
             chatRepository.save(chat);
-            todo.get().setStartTime(date);
+            todo.get().setStartTime(dateTime);
             todoService.save(todo.get());
-            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "todo-start-date-set", date));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "todo-start-time-set",
+                    dateTimeUtils.formatDateTime(chat, dateTime)));
         } else {
-            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-date-format", dateFormat));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-date-format",
+                    dateTimeUtils.getExampleDate(chat), dateTimeUtils.getExampleDateTime(chat)));
         }
     }
 

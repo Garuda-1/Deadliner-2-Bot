@@ -41,8 +41,9 @@ public class ServiceTestConfiguration {
 
     @Bean
     public MessageFormatter messageFormatter(ExposedResourceBundleMessageSource exposedResourceBundleMessageSource,
-                                             MessageSourceUtils messageSourceUtils) {
-        return new MessageFormatter(exposedResourceBundleMessageSource, messageSourceUtils);
+                                             MessageSourceUtils messageSourceUtils,
+                                             DateTimeUtils dateTimeUtils) {
+        return new MessageFormatter(exposedResourceBundleMessageSource, messageSourceUtils, dateTimeUtils);
     }
 
     @Bean

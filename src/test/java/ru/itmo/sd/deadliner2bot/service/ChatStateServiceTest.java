@@ -93,14 +93,14 @@ class ChatStateServiceTest {
         processMessage("First completely filled todo");
         checkChatState(ChatStateEnum.EDIT_TODO_STATE);
 
-        processMessage("/add_start_date");
+        processMessage("/add_start_time");
         checkChatState(ChatStateEnum.ADD_START_TIME_STATE);
-        processMessage("01-01-2000");
+        processMessage("1/1/00");
         checkChatState(ChatStateEnum.EDIT_TODO_STATE);
 
-        processMessage("/add_end_date");
+        processMessage("/add_end_time");
         checkChatState(ChatStateEnum.ADD_END_TIME_STATE);
-        processMessage("01-01-2100 12:00");
+        processMessage("1/1/00, 12:00 PM");
         checkChatState(ChatStateEnum.EDIT_TODO_STATE);
 
         Optional<Todo> todo = getTodoByName("First Todo");
@@ -110,10 +110,10 @@ class ChatStateServiceTest {
         assertThat(todo.get().getDescription().equals("First completely filled todo")).isTrue();
 
         assertThat(todo.get().getStartTime()).isNotNull();
-        assertThat(todo.get().getStartTime().toString());
+        assertThat(todo.get().getStartTime()).isEqualTo(LocalDateTime.of(2000, 1, 1, 0, 0, 0));
 
         assertThat(todo.get().getEndTime()).isNotNull();
-        assertThat(todo.get().getEndTime().toString());
+        assertThat(todo.get().getEndTime()).isEqualTo(LocalDateTime.of(2000, 1, 1, 12, 0, 0));
     }
 
     @Test
@@ -129,9 +129,8 @@ class ChatStateServiceTest {
 
         processMessage("wrong string");
         checkChatState(ChatStateEnum.SELECT_TIME_STATE);
-        processMessage("12:00");
+        processMessage("12:00 PM");
         checkChatState(ChatStateEnum.BASE_STATE);
-
     }
 
     @Test
@@ -141,7 +140,7 @@ class ChatStateServiceTest {
         processMessage("First Todo");
         processMessage("/finish");
 
-        long todoId = getTodoByName("First Todo").get().getTodoId();
+        long todoId = getTodoByName("First Todo").orElseThrow().getTodoId();
 
         processMessage("/select_todo");
         checkChatState(ChatStateEnum.SELECT_TODO_STATE);
@@ -157,11 +156,10 @@ class ChatStateServiceTest {
         Optional<Todo> todo = todoRepository.findById(todoId);
         assertThat(todo.isPresent()).isTrue();
         assertThat(todo.get().isCompleted()).isTrue();
-
     }
 
     private void processMessage(String message) {
-        chatStateService.processMessage(TEST_CHAT_ID, message, Locale.ENGLISH);
+        chatStateService.processMessage(TEST_CHAT_ID, message, Locale.US);
     }
 
     private void checkChatState(ChatStateEnum state) {

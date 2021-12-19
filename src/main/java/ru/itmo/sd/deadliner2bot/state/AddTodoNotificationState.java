@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.dateTimeFormat;
-
 @Component
 @RequiredArgsConstructor
 public class AddTodoNotificationState implements ChatState {
@@ -57,10 +55,10 @@ public class AddTodoNotificationState implements ChatState {
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-todo-selected"));
         }
 
-        LocalDateTime dateTime = dateTimeUtils.parseDateTime(message);
+        LocalDateTime dateTime = dateTimeUtils.parseDateTime(chat, message);
         if (dateTime == null) {
             return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-date-time-format",
-                    dateTimeFormat));
+                    dateTimeUtils.getExampleDateTime(chat)));
         }
         chat.setState(ChatStateEnum.EDIT_TODO_STATE);
         chatRepository.save(chat);
@@ -69,7 +67,7 @@ public class AddTodoNotificationState implements ChatState {
         todoNotification.setTodo(todo.get());
         todoNotificationService.save(todoNotification);
         return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "todo-notification-time-set",
-                dateTime));
+                dateTimeUtils.formatDateTime(chat, dateTime)));
     }
 
     @Override

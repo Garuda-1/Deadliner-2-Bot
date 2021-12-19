@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils.timeFormat;
-
 @Component
 @RequiredArgsConstructor
 public class SelectTimeState implements ChatState {
@@ -54,9 +52,10 @@ public class SelectTimeState implements ChatState {
             return null;
         }
 
-        LocalTime time = dateTimeUtils.parseTime(message);
+        LocalTime time = dateTimeUtils.parseTime(chat, message);
         if (time == null) {
-            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-time-format", timeFormat));
+            return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "invalid-time-format",
+                    dateTimeUtils.getExampleTime(chat)));
         }
 
         Set<DailyNotification> toUpdate = dailyNotificationService
@@ -71,7 +70,8 @@ public class SelectTimeState implements ChatState {
         );
         chat.setState(ChatStateEnum.BASE_STATE);
         chatRepository.save(chat);
-        return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "time-set", time));
+        return List.of(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "time-set",
+                dateTimeUtils.formatTime(chat, time)));
     }
 
     @Override

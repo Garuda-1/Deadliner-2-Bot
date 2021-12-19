@@ -3,12 +3,12 @@ package ru.itmo.sd.deadliner2bot.utils.chrono;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.itmo.sd.deadliner2bot.model.Chat;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoField;
+import java.time.format.FormatStyle;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
@@ -19,18 +19,7 @@ import java.util.Set;
 @Slf4j
 public class DateTimeUtils {
 
-    public static final String dateFormat = "dd-MM-yyyy";
-    public static final String timeFormat = "HH:mm";
-    public static final String dateTimeFormat = "dd-MM-yyyy HH:mm";
     private static final ZoneId botTimeZone = ZoneId.of("UTC+3");
-    public static final DateTimeFormatter optionalFormatter = new DateTimeFormatterBuilder()
-            .appendPattern(dateFormat)
-            .optionalStart()
-            .appendPattern(" " + timeFormat)
-            .optionalEnd()
-            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-            .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-            .toFormatter();
 
     private LocalDateTime stagingWeekStartDateTime;
     private LocalDateTime stagingWeekAuxStartDateTime;
@@ -49,47 +38,29 @@ public class DateTimeUtils {
         }
     }
 
-    public LocalDateTime parseDateTime(String dateTimeString) {
-        if (dateTimeString.length() > dateTimeFormat.length()) {
-            return null;
-        }
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateTimeFormat);
+    public LocalTime parseTime(Chat chat, String timeString) {
         try {
-            return LocalDateTime.parse(dateTimeString, formatter);
+            return LocalTime.parse(timeString, getLocalTimeFormatter(chat));
         } catch (DateTimeParseException e) {
             return null;
         }
     }
 
-    public LocalDateTime now() {
-        return LocalDateTime.now(botTimeZone);
-    }
-
-    public LocalDateTime parseDateTimeOptional(String dateTimeString) {
+    public LocalDateTime parseDateTime(Chat chat, String dateTimeString) {
         try {
-            return LocalDateTime.parse(dateTimeString, optionalFormatter);
+            return LocalDateTime.parse(dateTimeString, getLocalDateTimeFormatter(chat));
         } catch (DateTimeParseException e) {
             return null;
         }
     }
 
-    public LocalDateTime getDateTimeFromDayUnconfirmed(DayOfWeek dayOfWeek) {
-        return stagingWeekAuxStartDateTime.with(TemporalAdjusters.next(dayOfWeek));
-    }
-
-    public LocalDateTime setTimeAndConfirmed(LocalDateTime date, LocalTime time) {
-        DayOfWeek day = date.getDayOfWeek();
-        date = stagingWeekStartDateTime.with(TemporalAdjusters.next(day));
-        date = date.plusHours(time.getHour());
-        date = date.plusMinutes(time.getMinute());
-        return date;
-    }
-
-    public LocalTime parseTime(String timeString) {
-        timeString = deleteSpaces(timeString);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeFormat);
+    public LocalDateTime parseDateTimeOptional(Chat chat, String dateTimeString) {
+        LocalDateTime result = parseDateTime(chat, dateTimeString);
+        if (result != null) {
+            return result;
+        }
         try {
-            return LocalTime.parse(timeString, formatter);
+            return LocalDate.parse(dateTimeString, getLocalDateFormatter(chat)).atStartOfDay();
         } catch (DateTimeParseException e) {
             return null;
         }
@@ -117,17 +88,59 @@ public class DateTimeUtils {
         return days;
     }
 
-    private String deleteSpaces(String input) {
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < input.length(); i++) {
-            if (!Character.isWhitespace(input.charAt(i))) {
-                result.append(input.charAt(i));
-            }
-        }
-        return result.toString();
+    public String formatDate(Chat chat, LocalDate localDate) {
+        return localDate.format(getLocalDateFormatter(chat));
+    }
+
+    public String formatTime(Chat chat, LocalTime localTime) {
+        return localTime.format(getLocalTimeFormatter(chat));
+    }
+
+    public String formatDateTime(Chat chat, LocalDateTime localDateTime) {
+        return localDateTime.format(getLocalDateTimeFormatter(chat));
+    }
+
+    public String getExampleDate(Chat chat) {
+        return formatDate(chat, LocalDate.ofInstant(Instant.EPOCH, botTimeZone));
+    }
+
+    public String getExampleTime(Chat chat) {
+        return formatTime(chat, LocalTime.ofInstant(Instant.EPOCH, botTimeZone));
+    }
+
+    public String getExampleDateTime(Chat chat) {
+        return formatDateTime(chat, LocalDateTime.ofInstant(Instant.EPOCH, botTimeZone));
+    }
+
+    public LocalDateTime now() {
+        return LocalDateTime.now(botTimeZone);
+    }
+
+    public LocalDateTime getDateTimeFromDayUnconfirmed(DayOfWeek dayOfWeek) {
+        return stagingWeekAuxStartDateTime.with(TemporalAdjusters.next(dayOfWeek));
+    }
+
+    public LocalDateTime setTimeAndConfirmed(LocalDateTime date, LocalTime time) {
+        DayOfWeek day = date.getDayOfWeek();
+        date = stagingWeekStartDateTime.with(TemporalAdjusters.next(day));
+        date = date.plusHours(time.getHour());
+        date = date.plusMinutes(time.getMinute());
+        return date;
     }
 
     public LocalDateTime getStagingWeekAuxStartDateTime() {
         return stagingWeekAuxStartDateTime;
+    }
+
+    private DateTimeFormatter getLocalDateFormatter(Chat chat) {
+        return DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).localizedBy(chat.getLanguageCode());
+    }
+
+    private DateTimeFormatter getLocalTimeFormatter(Chat chat) {
+        return DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).localizedBy(chat.getLanguageCode());
+    }
+
+    private DateTimeFormatter getLocalDateTimeFormatter(Chat chat) {
+        return DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).localizedBy(chat.getLanguageCode());
     }
 }
