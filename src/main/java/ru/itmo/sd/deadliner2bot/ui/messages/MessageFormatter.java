@@ -25,8 +25,8 @@ public class MessageFormatter {
     private final MessageSourceUtils messageSourceUtils;
 
     public BotApiMethod<Message> stateHelpMessage(Chat chat, ChatStateEnum chatStateEnum) {
-        List<String> commands = findStatePropertiesWithPrefix(chatStateEnum, ".cmd");
-        List<String> descriptions = findStatePropertiesWithPrefix(chatStateEnum, "description");
+        List<String> commands = findStatePropertiesWithPrefix(chat, chatStateEnum, ".cmd");
+        List<String> descriptions = findStatePropertiesWithPrefix(chat, chatStateEnum, "description");
         return messageSourceUtils.createPlainMarkdownMessage(chat, IntStream.range(0, commands.size())
                 .mapToObj(i -> messageSourceUtils.getCommonProperty("help-format", commands.get(i),
                         descriptions.get(i)))
@@ -68,12 +68,12 @@ public class MessageFormatter {
         return messageSourceUtils.createPlainMarkdownMessage(chat, lines.toString());
     }
 
-    private List<String> findStatePropertiesWithPrefix(ChatStateEnum chatStateEnum, String prefix) {
+    private List<String> findStatePropertiesWithPrefix(Chat chat, ChatStateEnum chatStateEnum, String prefix) {
         return messageSource
                 .getCommonPropertiesCodes(c -> c.startsWith(chatStateEnum + ".") && c.endsWith(prefix))
                 .stream()
                 .sorted()
-                .map(messageSourceUtils::getCommonProperty)
+                .map(c -> messageSourceUtils.getLocalizedProperty(chat, c))
                 .map(this::escape)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
