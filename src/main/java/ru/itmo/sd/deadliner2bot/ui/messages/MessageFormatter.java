@@ -26,7 +26,7 @@ public class MessageFormatter {
 
     public BotApiMethod<Message> stateHelpMessage(Chat chat, ChatStateEnum chatStateEnum) {
         List<String> commands = findStatePropertiesWithPrefix(chat, chatStateEnum, ".cmd");
-        List<String> descriptions = findStatePropertiesWithPrefix(chat, chatStateEnum, "description");
+        List<String> descriptions = findStatePropertiesWithPrefix(chat, chatStateEnum, ".description");
         return messageSourceUtils.createPlainMarkdownMessage(chat, IntStream.range(0, commands.size())
                 .mapToObj(i -> messageSourceUtils.getCommonProperty("help-format", commands.get(i),
                         descriptions.get(i)))
