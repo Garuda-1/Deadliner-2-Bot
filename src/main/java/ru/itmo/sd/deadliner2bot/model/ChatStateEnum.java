@@ -1,0 +1,15 @@
+package ru.itmo.sd.deadliner2bot.model;
+
+public enum ChatStateEnum {
+    BASE_STATE,
+    SELECT_TODO_STATE,
+    TODO_SELECTED_STATE,
+    ADD_NAME_STATE,
+    EDIT_TODO_STATE,
+    ADD_DESCRIPTION_STATE,
+    ADD_START_TIME_STATE,
+    ADD_END_TIME_STATE,
+    SELECT_DAYS_STATE,
+    SELECT_TIME_STATE,
+    ADD_TODO_NOTIFICATION_STATE
+}

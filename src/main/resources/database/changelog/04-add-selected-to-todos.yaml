@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: lexzhe
+      changes:
+        - addColumn:
+            tableName: todos
+            columns:
+              - column:
+                  name: selected
+                  type: boolean
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false
+
