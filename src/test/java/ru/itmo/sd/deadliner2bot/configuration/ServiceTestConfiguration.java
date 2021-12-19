@@ -23,6 +23,11 @@ public class ServiceTestConfiguration {
     }
 
     @Bean
+    public DateTimeUtils dateTimeUtils() {
+        return new DateTimeUtils();
+    }
+
+    @Bean
     public ExposedResourceBundleMessageSource exposedResourceBundleMessageSource() {
         ExposedResourceBundleMessageSource messageSource = new ExposedResourceBundleMessageSource();
         messageSource.setBasenames("classpath:/messages/messages");
