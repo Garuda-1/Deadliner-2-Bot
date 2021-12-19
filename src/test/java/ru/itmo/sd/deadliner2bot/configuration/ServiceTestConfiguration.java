@@ -12,6 +12,7 @@ import ru.itmo.sd.deadliner2bot.service.TaskFetchingService;
 import ru.itmo.sd.deadliner2bot.ui.messages.ExposedResourceBundleMessageSource;
 import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
 import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
+import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 
 @TestConfiguration
 public class ServiceTestConfiguration {
@@ -19,6 +20,11 @@ public class ServiceTestConfiguration {
     @Bean
     public Bot bot() {
         return Mockito.mock(Bot.class);
+    }
+
+    @Bean
+    public DateTimeUtils dateTimeUtils() {
+        return new DateTimeUtils();
     }
 
     @Bean
@@ -50,6 +56,7 @@ public class ServiceTestConfiguration {
                                                    TodoNotificationRepository todoNotificationRepository,
                                                    TodoRepository todoRepository,
                                                    MessageFormatter messageFormatter,
+                                                   DateTimeUtils dateTimeUtils,
                                                    Bot bot) {
         return new TaskFetchingService(
                 threadPoolTaskScheduler,
@@ -57,6 +64,7 @@ public class ServiceTestConfiguration {
                 todoNotificationRepository,
                 todoRepository,
                 messageFormatter,
+                dateTimeUtils,
                 bot
         );
     }

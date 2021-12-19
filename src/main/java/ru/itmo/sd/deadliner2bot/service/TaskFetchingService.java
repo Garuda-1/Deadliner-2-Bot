@@ -13,6 +13,7 @@ import ru.itmo.sd.deadliner2bot.repository.DailyNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoNotificationRepository;
 import ru.itmo.sd.deadliner2bot.repository.TodoRepository;
 import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
+import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
@@ -30,6 +31,7 @@ public class TaskFetchingService {
     private final TodoNotificationRepository todoNotificationRepository;
     private final TodoRepository todoRepository;
     private final MessageFormatter messageFormatter;
+    private final DateTimeUtils dateTimeUtils;
     private final Bot bot;
 
     @Value("${notifications.stored-range-sec}")
@@ -39,7 +41,7 @@ public class TaskFetchingService {
     @Transactional
     @Scheduled(cron = "0 * * * * *")
     public void doScheduledJob() {
-        fetchNotifications(LocalDateTime.now());
+        fetchNotifications(dateTimeUtils.now());
     }
 
     public void fetchNotifications(LocalDateTime now) {

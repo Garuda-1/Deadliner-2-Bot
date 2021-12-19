@@ -22,6 +22,7 @@ public class DateTimeUtils {
     public static final String dateFormat = "dd-MM-yyyy";
     public static final String timeFormat = "HH:mm";
     public static final String dateTimeFormat = "dd-MM-yyyy HH:mm";
+    private static final ZoneId botTimeZone = ZoneId.of("UTC+3");
     private static final DateTimeFormatter formatter = new DateTimeFormatterBuilder()
             .appendPattern(dateFormat)
             .optionalStart()
@@ -58,6 +59,10 @@ public class DateTimeUtils {
         } catch (DateTimeParseException e) {
             return null;
         }
+    }
+
+    public LocalDateTime now() {
+        return LocalDateTime.now(botTimeZone);
     }
 
     public LocalDateTime getDateTimeFromDayUnconfirmed(DayOfWeek dayOfWeek) {

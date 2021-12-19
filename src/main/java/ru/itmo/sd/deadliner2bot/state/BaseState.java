@@ -11,9 +11,9 @@ import ru.itmo.sd.deadliner2bot.service.TodoService;
 import ru.itmo.sd.deadliner2bot.ui.commands.Commands;
 import ru.itmo.sd.deadliner2bot.ui.messages.MessageFormatter;
 import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
+import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 
 import javax.annotation.PostConstruct;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,7 @@ public class BaseState implements ChatState {
     private final MessageFormatter messageFormatter;
     private final MessageSourceUtils messageSourceUtils;
     private final Commands commands;
+    private final DateTimeUtils dateTimeUtils;
     private Map<String, Commands.CommandInfo> commandsInfo;
 
     @PostConstruct
@@ -46,7 +47,7 @@ public class BaseState implements ChatState {
         List<BotApiMethod<?>> response = new ArrayList<>();
         if (commandsInfo.get("show-todos-for-today").testMessageForCommand(message)) {
             List<Todo> notCompletedTodos =
-                    todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
+                    todoService.findNotCompletedTodosByChatId(chat.getChatId(), dateTimeUtils.now());
             if (notCompletedTodos.isEmpty()) {
                 response.add(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-active-todos", chat));
             } else {
@@ -56,7 +57,7 @@ public class BaseState implements ChatState {
             return response;
         } else if (commandsInfo.get("select-todo").testMessageForCommand(message)) {
             List<Todo> notCompletedTodos =
-                    todoService.findNotCompletedTodosByChatId(chat.getChatId(), LocalDateTime.now());
+                    todoService.findNotCompletedTodosByChatId(chat.getChatId(), dateTimeUtils.now());
             if (notCompletedTodos.isEmpty()) {
                 response.add(messageSourceUtils.createMarkdownMessage(chat, chatStateEnum, "no-active-todos"));
             } else {
