@@ -94,13 +94,13 @@ class ChatStateServiceTest {
         checkChatState(ChatStateEnum.EDIT_TODO_STATE);
 
         processMessage("/add_start_date");
-        checkChatState(ChatStateEnum.ADD_START_DATE_STATE);
+        checkChatState(ChatStateEnum.ADD_START_TIME_STATE);
         processMessage("01-01-2000");
         checkChatState(ChatStateEnum.EDIT_TODO_STATE);
 
         processMessage("/add_end_date");
-        checkChatState(ChatStateEnum.ADD_END_DATE_STATE);
-        processMessage("01-01-2100");
+        checkChatState(ChatStateEnum.ADD_END_TIME_STATE);
+        processMessage("01-01-2100 12:00");
         checkChatState(ChatStateEnum.EDIT_TODO_STATE);
 
         Optional<Todo> todo = getTodoByName("First Todo");
