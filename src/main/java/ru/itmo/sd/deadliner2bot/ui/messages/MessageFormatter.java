@@ -7,6 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import ru.itmo.sd.deadliner2bot.model.Chat;
 import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.model.Todo;
+import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -23,6 +24,7 @@ public class MessageFormatter {
 
     private final ExposedResourceBundleMessageSource messageSource;
     private final MessageSourceUtils messageSourceUtils;
+    private final DateTimeUtils dateTimeUtils;
 
     public BotApiMethod<Message> stateHelpMessage(Chat chat, ChatStateEnum chatStateEnum) {
         List<String> commands = findStatePropertiesWithPrefix(chat, chatStateEnum, ".cmd");
@@ -53,9 +55,9 @@ public class MessageFormatter {
                 todo.getName(),
                 Objects.requireNonNullElse(todo.getDescription(),
                         messageSourceUtils.getLocalizedProperty(chat, "todo-default-description")),
-                Objects.requireNonNullElse(todo.getStartTime(),
+                Objects.requireNonNullElse(dateTimeUtils.formatDateTime(chat, todo.getStartTime()),
                         messageSourceUtils.getLocalizedProperty(chat, "todo-default-start-time")),
-                Objects.requireNonNullElse(todo.getEndTime(),
+                Objects.requireNonNullElse(dateTimeUtils.formatDateTime(chat, todo.getEndTime()),
                         messageSourceUtils.getLocalizedProperty(chat, "todo-default-end-time")),
                 todo.isDailyNotificationsEnabled());
         return messageSourceUtils.createPlainMarkdownMessage(chat, todoView);
@@ -80,10 +82,10 @@ public class MessageFormatter {
 
     private String formatTodo(Chat chat, Todo todo, boolean showIds) {
         String range = messageSourceUtils.getLocalizedProperty(chat, "todo-range",
-                Objects.requireNonNullElse(todo.getStartTime(),
-                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-start-time")),
-                Objects.requireNonNullElse(todo.getEndTime(),
-                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-end-time")));
+                todo.getStartTime() != null ? dateTimeUtils.formatDateTime(chat, todo.getStartTime()) :
+                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-start-time"),
+                todo.getEndTime() != null ? dateTimeUtils.formatDateTime(chat, todo.getEndTime()) :
+                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-end-time"));
         if (showIds) {
             return messageSourceUtils.getLocalizedProperty(chat, "todo-format-with-ids",
                     range, todo.getName(),
