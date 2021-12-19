@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 6
+      author: levashov
+      changes:
+        - update:
+            tableName: chats
+            columns:
+              - column:
+                  name: state
+                  value: 'ADD_START_TIME_STATE'
+            where: state='ADD_START_DATE_STATE'
+        - update:
+            tableName: chats
+            columns:
+              - column:
+                  name: state
+                  value: 'ADD_END_TIME_STATE'
+            where: state='ADD_END_DATE_STATE'
