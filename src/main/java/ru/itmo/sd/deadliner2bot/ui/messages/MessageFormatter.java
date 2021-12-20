@@ -37,7 +37,8 @@ public class MessageFormatter {
 
     public BotApiMethod<Message> notCompletedTodosMessage(Chat chat, List<Todo> todos, ChatStateEnum chatStateEnum,
                                                           String headerCode, boolean showIds) {
-        return notCompletedTodosMessage(chat, todos, messageSourceUtils.chatStateCode(chatStateEnum, headerCode), showIds);
+        return notCompletedTodosMessage(chat, todos, messageSourceUtils.chatStateCode(chatStateEnum, headerCode),
+                showIds);
     }
 
     public BotApiMethod<Message> notCompletedTodosMessage(Chat chat, List<Todo> todos, String headerCode,
@@ -82,10 +83,10 @@ public class MessageFormatter {
 
     private String formatTodo(Chat chat, Todo todo, boolean showIds) {
         String range = messageSourceUtils.getLocalizedProperty(chat, "todo-range",
-                todo.getStartTime() != null ? dateTimeUtils.formatDateTime(chat, todo.getStartTime()) :
-                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-start-time"),
-                todo.getEndTime() != null ? dateTimeUtils.formatDateTime(chat, todo.getEndTime()) :
-                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-end-time"));
+                Objects.requireNonNullElse(dateTimeUtils.formatDateTime(chat, todo.getStartTime()),
+                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-start-time")),
+                Objects.requireNonNullElse(dateTimeUtils.formatDateTime(chat, todo.getEndTime()),
+                        messageSourceUtils.getLocalizedProperty(chat, "todo-default-end-time")));
         if (showIds) {
             return messageSourceUtils.getLocalizedProperty(chat, "todo-format-with-ids",
                     range, todo.getName(),

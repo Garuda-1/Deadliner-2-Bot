@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.itmo.sd.deadliner2bot.model.Chat;
 
+import javax.annotation.Nullable;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -96,8 +97,9 @@ public class DateTimeUtils {
         return localTime.format(getLocalTimeFormatter(chat));
     }
 
-    public String formatDateTime(Chat chat, LocalDateTime localDateTime) {
-        return localDateTime.format(getLocalDateTimeFormatter(chat));
+    @Nullable
+    public String formatDateTime(Chat chat, @Nullable LocalDateTime localDateTime) {
+        return localDateTime == null ? null : localDateTime.format(getLocalDateTimeFormatter(chat));
     }
 
     public String getExampleDate(Chat chat) {
