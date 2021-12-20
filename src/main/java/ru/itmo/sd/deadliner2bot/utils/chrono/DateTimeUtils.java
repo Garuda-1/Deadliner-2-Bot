@@ -116,6 +116,10 @@ public class DateTimeUtils {
         return LocalDateTime.now(botTimeZone);
     }
 
+    public LocalDateTime toRealDateTime(LocalDateTime localDateTime) {
+        return ZonedDateTime.of(localDateTime, botTimeZone).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
     public LocalDateTime getDateTimeFromDayUnconfirmed(DayOfWeek dayOfWeek) {
         return stagingWeekAuxStartDateTime.with(TemporalAdjusters.next(dayOfWeek));
     }

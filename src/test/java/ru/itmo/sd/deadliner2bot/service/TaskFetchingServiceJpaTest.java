@@ -15,6 +15,7 @@ import ru.itmo.sd.deadliner2bot.bot.Bot;
 import ru.itmo.sd.deadliner2bot.configuration.ServiceTestConfiguration;
 import ru.itmo.sd.deadliner2bot.model.*;
 import ru.itmo.sd.deadliner2bot.repository.*;
+import ru.itmo.sd.deadliner2bot.utils.chrono.DateTimeUtils;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -43,6 +44,8 @@ class TaskFetchingServiceJpaTest {
     private TaskFetchingService taskFetchingService;
     @Autowired
     private ThreadPoolTaskScheduler threadPoolTaskScheduler;
+    @Autowired
+    private DateTimeUtils dateTimeUtils;
     @Autowired
     private Bot bot;
 
@@ -174,7 +177,7 @@ class TaskFetchingServiceJpaTest {
                 ArgumentCaptor.forClass(TaskFetchingService.TodoNotificationRunnable.class);
         verify(threadPoolTaskScheduler, times(1))
                 .schedule(argumentCaptor.capture(),
-                        eq(Timestamp.valueOf(notificationTime)));
+                        eq(Timestamp.valueOf(dateTimeUtils.toRealDateTime(notificationTime))));
 
         TaskFetchingService.TodoNotificationRunnable runnable = argumentCaptor.getValue();
         runnable.run();
