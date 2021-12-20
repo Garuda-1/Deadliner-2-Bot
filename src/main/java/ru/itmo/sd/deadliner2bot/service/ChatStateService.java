@@ -2,7 +2,7 @@ package ru.itmo.sd.deadliner2bot.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import ru.itmo.sd.deadliner2bot.model.Chat;
 import ru.itmo.sd.deadliner2bot.model.ChatStateEnum;
 import ru.itmo.sd.deadliner2bot.repository.ChatRepository;
@@ -35,7 +35,7 @@ public class ChatStateService {
         }
     }
 
-    public List<BotApiMethod<?>> processMessage(long chatId, String message, Locale chatLocale) {
+    public List<? extends PartialBotApiMethod<?>> processMessage(long chatId, String message, Locale chatLocale) {
         Optional<Chat> chatOptional = chatRepository.findById(chatId);
         String startCommand = messageSourceUtils.getCommonProperty("start-command");
         String helpCommand = messageSourceUtils.getCommonProperty("help-command");
@@ -60,6 +60,9 @@ public class ChatStateService {
         if (helpCommand.equals(message)) {
             return List.of(messageFormatter.stateHelpMessage(chat, state));
         }
-        return chatStateMap.get(state).process(chat, message);
+        return Objects.requireNonNullElse(chatStateMap.get(state).process(chat, message),
+                List.of(messageSourceUtils.createMarkdownMessage(chatId, "message-not-recognized", chatLocale),
+                        messageSourceUtils.getSticker(chat),
+                        messageFormatter.stateHelpMessage(chat, state)));
     }
 }

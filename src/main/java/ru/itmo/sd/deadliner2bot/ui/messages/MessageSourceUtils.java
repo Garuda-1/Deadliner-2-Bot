@@ -17,7 +17,7 @@ import java.util.Locale;
 public class MessageSourceUtils {
 
     private static final InputFile defaultResponse = new InputFile(
-            "CAACAgIAAxkBAAMRYbJM3wABmFg_wMNH_vYufdrHebfXAAK4AAMTF8olDES8JhyUUCMjBA");
+            "CAACAgIAAxkBAAIDFGHAXCKqjW3KHizAyAw6aN0q-wg7AAJrEgACvrphSeDky9qx74EOIwQ");
     private final ExposedResourceBundleMessageSource messageSource;
 
     public BotApiMethod<Message> createMarkdownMessage(Chat chat, String code, Object... args) {
@@ -70,9 +70,9 @@ public class MessageSourceUtils {
         return chatStateEnum + "." + code;
     }
 
-    public SendSticker getSticker(long chatId) {
+    public SendSticker getSticker(Chat chat) {
         return SendSticker.builder()
-                .chatId(Long.toString(chatId))
+                .chatId(Long.toString(chat.getChatId()))
                 .sticker(defaultResponse)
                 .build();
     }
