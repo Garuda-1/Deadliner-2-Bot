@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.itmo.sd.deadliner2bot.service.ChatStateService;
-import ru.itmo.sd.deadliner2bot.ui.messages.MessageSourceUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -28,7 +30,6 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
     private String botToken;
 
     private final ChatStateService chatStateService;
-    private final MessageSourceUtils messageSourceUtils;
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -44,14 +45,16 @@ public class BotImpl extends TelegramLongPollingBot implements Bot {
         log.info(update.getMessage().getChatId() + " sent: " + messageText);
 
         try {
-            List<BotApiMethod<?>> response = chatStateService.processMessage(chatId, messageText, chatLocale);
-            if (response != null && !response.isEmpty()) {
-                for (BotApiMethod<?> message : response) {
-                    execute(message);
+            List<? extends PartialBotApiMethod<?>> response =
+                    chatStateService.processMessage(chatId, messageText, chatLocale);
+            for (PartialBotApiMethod<?> message : response) {
+                if (message instanceof SendMessage) {
+                    execute((SendMessage) message);
+                } else if (message instanceof SendSticker) {
+                    execute((SendSticker) message);
+                } else {
+                    log.debug("Unrecognized bot APU method: {}", message.toString());
                 }
-            } else {
-                execute(messageSourceUtils.createMarkdownMessage(chatId, "message-not-recognized", chatLocale));
-                execute(messageSourceUtils.getSticker(chatId));
             }
         } catch (TelegramApiException e) {
             log.debug("Failed to respond\n" + e);
