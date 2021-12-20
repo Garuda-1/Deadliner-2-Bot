@@ -59,7 +59,7 @@ public class TaskFetchingService {
         Set<TodoNotification> todoNotifications = getTodoNotifications(limit);
         todoNotifications.forEach(todoNotification ->
                 threadPoolTaskScheduler.schedule(new TodoNotificationRunnable(todoNotification),
-                        Timestamp.valueOf(todoNotification.getNotificationTime())));
+                        Timestamp.valueOf(dateTimeUtils.toRealDateTime(todoNotification.getNotificationTime()))));
         log.info("Scheduled {} todo notifications", todoNotifications.size());
     }
 
